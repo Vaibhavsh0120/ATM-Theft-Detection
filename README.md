@@ -1,124 +1,153 @@
-# Real-Time ATM Theft Detection with YOLOv8
+<h1 align="center">🚨 Real-Time ATM Theft Detection with YOLOv8</h1>
 
-This project uses a custom-trained YOLOv8n model to detect suspicious activities at ATMs in real-time, focusing on identifying individuals with covered faces.
+<p align="center">
+  <img src="https://media.licdn.com/dms/image/sync/v2/D5627AQEQ41fkNOIq8A/articleshare-shrink_800/articleshare-shrink_800/0/1722446223640?e=2147483647&v=beta&t=IpkZR8u2Y5LepFrMrfZo-UjZLkOoFPgaiXqtNU9WUMc" alt="ATM Theft Detection Demo" width="700"/>
+</p>
 
-![ATM Theft Detection Inference](https://i.imgur.com/your-image-code.jpg)
-*Replace this link with a URL to a screenshot of your `live_inference.py` running!*
-
----
-
-## About The Project
-
-The primary goal is to enhance ATM security by automatically identifying potential threats, such as individuals concealing their identity. The model was trained on a custom dataset from Roboflow and is optimized for fast, real-time inference on a live webcam feed.
-
-### Class Merging
-
-The original dataset contained **13 distinct classes**. To simplify the problem into a binary classification task ("covered" vs "uncovered"), these classes were merged into two final categories using the `merge_classes.py` script:
-
-* **`Face_Covered`**: Includes `balaclava`, `concealing glasses`, `cover`, `hand`, `mask`, `medicine mask`, `person-with-mask`, `scarf`, and `thief_mask`.
-* **`Face_Uncovered`**: Includes `non-concealing glasses`, `normal`, `nothing`, and `person-without-mask`.
+<p align="center">
+  <b>Detect suspicious ATM activities in real-time using a custom YOLOv8n model, focusing on individuals with covered faces.</b>
+</p>
 
 ---
 
-## Getting Started
+## 📖 Overview
 
-Follow these steps to set up and run the project on your local machine.
+This project aims to enhance ATM security by automatically detecting potential threats, such as individuals concealing their identity. The YOLOv8n model is trained on a custom Roboflow dataset and optimized for fast, real-time inference on webcam feeds.
+
+### 🎭 Class Merging
+
+The original dataset had **13 classes**. To simplify detection, these were merged into two categories using `merge_classes.py`:
+
+- **Face_Covered:** `balaclava`, `concealing glasses`, `cover`, `hand`, `mask`, `medicine mask`, `person-with-mask`, `scarf`, `thief_mask`
+- **Face_Uncovered:** `non-concealing glasses`, `normal`, `nothing`, `person-without-mask`
+
+---
+
+## 🚀 Quick Start
 
 ### 1. Prerequisites
 
-* Python 3.8+
-* An NVIDIA GPU with CUDA support is highly recommended for real-time performance.
+- Python 3.8+
+- NVIDIA GPU with CUDA (recommended for real-time performance)
 
 ### 2. Setup
 
-First, clone the repository and navigate into the project directory:
-```bash
-git clone [https://github.com/your-username/atm-theft-detection.git](https://github.com/your-username/atm-theft-detection.git)
-cd atm-theft-detection
-````
-
-Next, create a Python virtual environment and install the required packages:
+Clone the repository and enter the project directory:
 
 ```bash
-# Create a virtual environment
+git clone https://github.com/Vaibhav0120/ATM-Theft-Detection.git
+cd ATM-Theft-Detection
+```
+
+Create a virtual environment and install dependencies:
+
+```bash
 python -m venv venv
-
-# Activate it (on Windows)
+# Windows
 .\venv\Scripts\activate
-
-# Activate it (on macOS/Linux)
+# macOS/Linux
 source venv/bin/activate
-
-# Install dependencies from the requirements file
 pip install -r requirements.txt
 ```
 
-### 3\. Environment and Downloads
+### 3. Roboflow API Key & Dataset
 
-Before running, you need your Roboflow API key and the necessary project files.
-
-1.  **Create a `.env` file** by copying the `.env.example` template.
-2.  **Add your API key** to the `.env` file. You can find this in your Roboflow account settings.
-3.  **Run the setup script** to download the dataset from Roboflow and the pre-trained `best.pt` model weights.
+1. [Sign up at Roboflow](https://roboflow.com/)
+2. Get your API key from workspace settings.
+3. Copy `.env.example` to `.env` and add your API key:
+    ```
+    ROBOFLOW_API_KEY="YOUR_API_KEY"
+    ```
+4. Download dataset and model weights:
     ```bash
     python setup.py
     ```
------
+5. [View dataset on Roboflow](https://universe.roboflow.com/vaibhav-7tcrm/atm-theft-detection-f8ezg)
 
-<br>
+---
 
-## Usage
+## 📂 Project Structure
 
-This repository is configured for two main use-cases: running live inference with the provided pre-trained model, or training your own model from scratch using the same dataset.
+```
+ATM-THEFT-DETECTION/
+├── .env                # Your API key (local only)
+├── .env.example        # Template for .env
+├── .gitignore
+├── README.md
+├── requirements.txt
+├── setup.py            # Downloads dataset & weights
+├── train.py            # Model training script
+├── live_inference.py   # Real-time webcam inference
+├── merge_classes.py    # Merges original classes
+│
+├── ATM-Theft-Detection-2/ # Dataset (created by setup.py)
+│   ├── data.yaml
+│   ├── train/
+│   ├── valid/
+│   └── test/
+│
+└── weights/
+    └── best.pt         # Pre-trained model weights
+```
 
-### 1\. Using the Pre-trained Model (Live Inference)
+---
 
-The `requirements.txt` file installs `opencv-python-headless` by default to ensure compatibility with cloud services like Roboflow. To run live inference on your local machine, you must switch to the full version of OpenCV.
+## 💻 Usage
 
-**Step 1: Swap OpenCV Version**
+### 1. Live Inference (Pre-trained Model)
 
-First, uninstall the headless version and install the full desktop version:
+**Step 1:** Switch to full OpenCV for webcam support:
 
 ```bash
 pip uninstall opencv-python-headless
 pip install opencv-python
 ```
 
-**Step 2: Run the Inference Script**
-
-Once the correct OpenCV version is installed, run the `live_inference.py` script:
+**Step 2:** Run live inference:
 
 ```bash
 python live_inference.py
 ```
 
-A window will open showing your webcam feed with real-time bounding boxes. Press **'q'** to quit.
+A window will show your webcam feed with real-time detections. Press **'q'** to exit.
 
-> **Note:** If you later need to use a script that requires the headless version, you can always switch back by running `pip install -r requirements.txt`.
+> **Tip:** Use separate Python environments for `opencv-python` and `opencv-python-headless` if needed.
 
-### 2\. Training a New Model
+### 2. Train Your Own Model
 
-If you want to train your own model using this dataset, follow these steps.
+**Step 1:** Complete setup steps above.
 
-**Step 1: (Optional) Modify Training Parameters**
+**Step 2:** Merge classes:
 
-You can open the `train.py` script to adjust hyperparameters like the number of `epochs`, `img_size` (image size), or `device` (e.g., changing from `0` for GPU to `'cpu'`).
+```bash
+python merge_classes.py
+```
 
-**Step 2: Run the Training Script**
+**Step 3:** (Optional) Edit `train.py` for hyperparameters (epochs, image size, device).
 
-The `train.py` script is pre-configured to start training from the official `yolov8n.pt` weights and use the downloaded dataset.
+**Step 4:** Start training:
 
 ```bash
 python train.py
 ```
 
-Training progress will be displayed in the console. When finished, the new weights (including `best.pt`) will be saved in a new directory inside the `runs/detect/` folder.
+New weights will be saved in `runs/detect/train/weights/`.
 
-## Performance
+**Step 5:** Replace `weights/best.pt` with your new model.
 
-The trained model achieved the following metrics on the validation set:
+**Step 6:** Run live inference as above.
 
-  - **mAP@50:** 94.5%
-  - **Precision:** 94.0%
-  - **Recall:** 88.0%
+---
+
+## 📊 Model Performance
+
+- **mAP@50:** 94.5%
+- **Precision:** 94.0%
+- **Recall:** 88.0%
+
+---
+
+## 🙌 Contributing
+
+Pull requests and suggestions are welcome! Please open an issue for major changes.
 
