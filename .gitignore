@@ -1,3 +1,20 @@
+# Dataset folders (downloaded by setup.py)
 train/
 test/
 valid/
+ATM-Theft-Detection-2/
+
+# Environment file with secrets
+.env
+
+# Python virtual environment
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Ultralytics runs and weights folders
+runs/
+weights/

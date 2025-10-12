@@ -1,0 +1,15 @@
+# Path to the root of the downloaded dataset folder
+path: ./ATM-Theft-Detection-2
+
+# Directories for train, validation, and test images (relative to the path above)
+train: train/images
+val: valid/images
+test: test/images
+
+# Number of classes
+nc: 2
+
+# Merged class names
+names:
+  0: Face_Covered
+  1: Face_Uncovered
