@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 13
+names: ['balaclava', 'concealing glasses', 'cover', 'hand', 'mask', 'medicine mask', 'non-concealing glasses', 'normal', 'nothing', 'person-with-mask', 'person-without-mask', 'scarf', 'thief_mask']
+
+roboflow:
+  workspace: vaibhav-7tcrm
+  project: atm-theft-detection-f8ezg
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/vaibhav-7tcrm/atm-theft-detection-f8ezg/dataset/2

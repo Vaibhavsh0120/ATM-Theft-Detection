@@ -1,0 +1,1 @@
+yolo train data=final_dataset.yaml model=yolov8n.pt epochs=100 imgsz=640 device=0
