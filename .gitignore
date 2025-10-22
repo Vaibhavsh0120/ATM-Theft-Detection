@@ -1,20 +1,29 @@
-# Dataset folders (downloaded by setup.py)
-train/
-test/
-valid/
-ATM-Theft-Detection-2/
-
-# Environment file with secrets
-.env
-
-# Python virtual environment
+# Virtual environments
+face_venv/
+action_venv/
 venv/
 .venv/
 
-# Python cache
+# Environment file with secrets (if kept in root, otherwise adjust)
+.env
+
+# Python cache files
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Ultralytics runs and weights folders
-runs/
-weights/
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE settings folders
+.idea/
+.vscode/
+
+# Downloaded datasets/weights (handle within specific projects if needed)
+# Example: ATM_Face_Recognition/ATM-Theft-Detection-2/
+# Example: ATM_Face_Recognition/weights/
+
+# Ultralytics runs (handle within specific project)
+# Example: ATM_Face_Recognition/runs/
