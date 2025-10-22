@@ -1,5 +1,5 @@
-# Path to the root of the downloaded dataset folder (relative to this file's location)
-path: ./ATM-Theft-Detection-2 # Assumes dataset folder is in the same dir as this YAML
+# Path to the root of the downloaded dataset folder (relative to this file's location/training script execution dir)
+path: ./ATM-Theft-Detection-2
 
 # Directories for train, validation, and test images (relative to the path above)
 train: train/images

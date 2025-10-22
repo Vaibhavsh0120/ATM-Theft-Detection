@@ -4,14 +4,15 @@ from ultralytics import YOLO # type: ignore
 
 def main():
     # Get the directory where the script is located
-    script_dir = os.path.dirname(__file__)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(script_dir) # IMPORTANT: Change working directory to script's dir
 
     # --- Training Configuration ---
-    # Path to the dataset YAML file (relative to this script)
-    data_yaml = os.path.join(script_dir, 'merged_dataset.yaml')
+    # Path to the dataset YAML file (now relative to the script dir)
+    data_yaml = 'merged_dataset.yaml'
 
-    # Pre-trained model to start from (relative to this script)
-    pretrained_model = os.path.join(script_dir, 'yolov8n.pt')
+    # Pre-trained model to start from (now relative to the script dir)
+    pretrained_model = 'yolov8n.pt'
 
     # Training parameters
     epochs = 5
@@ -22,22 +23,22 @@ def main():
 
     # --- Verification ---
     if not os.path.exists(data_yaml):
-        print(f"Error: Dataset YAML not found at '{data_yaml}'")
-        print("Please ensure 'merged_dataset.yaml' is in the same directory as train.py")
-        print("Run 'python merge_classes.py' if needed.")
+        print(f"Error: Dataset YAML not found at '{os.path.abspath(data_yaml)}'")
+        print("Please ensure 'merged_dataset.yaml' is in the same directory as train.py.")
+        print("Run 'python setup.py' and 'python merge_classes.py' first.")
         return
 
     if not os.path.exists(pretrained_model):
-        print(f"Error: Base model '{os.path.basename(pretrained_model)}' not found at '{pretrained_model}'")
+        print(f"Error: Base model '{pretrained_model}' not found at '{os.path.abspath(pretrained_model)}'")
         print("Please ensure 'yolov8n.pt' is in the same directory as train.py.")
         # You could add logic here to download yolov8n.pt if missing
         return
 
     print("--- Starting Model Training ---")
-    print(f"Running from directory: {os.getcwd()}") # Show current working directory
+    print(f"Working Directory: {os.getcwd()}") # Confirm working directory
     print(f"Using device: {str(device).upper()}")
-    print(f"Dataset YAML: {os.path.relpath(data_yaml)}")
-    print(f"Base Model: {os.path.relpath(pretrained_model)}")
+    print(f"Dataset YAML: {data_yaml}")
+    print(f"Base Model: {pretrained_model}")
     print(f"Epochs: {epochs}")
     print(f"Image Size: {img_size}")
     print("-----------------------------")
@@ -46,24 +47,21 @@ def main():
     model = YOLO(pretrained_model)
 
     # Train the model
-    # Note: Ultralytics handles the 'runs' directory relative to the execution location
+    # Note: Ultralytics creates 'runs' relative to the current working directory
     try:
         model.train(
-            data=data_yaml, # Use the absolute or correct relative path
+            data=data_yaml, # Path is now relative to script_dir due to os.chdir()
             epochs=epochs,
             imgsz=img_size,
             device=device,
             exist_ok=True, # Allows re-running training in the same directory
-            project=script_dir, # Optional: force runs dir creation inside script dir
-            name='train' # Optional: sets the subfolder name in 'runs/detect/'
+            project='.', # Create runs folder in the current directory (ATM_Face_Recognition)
+            name='runs/detect/train' # Define the experiment path structure
         )
         print("\n✅ --- Training Complete ---")
-        print(f"Best model weights saved in '{os.path.join(script_dir, 'runs/detect/train/weights/')}' directory.")
+        print("Best model weights saved in './runs/detect/train/weights/' directory.")
     except Exception as e:
         print(f"\n❌ An error occurred during training: {e}")
 
 if __name__ == '__main__':
-    # Change directory to the script's location before running main
-    # This makes relative paths (like './ATM-Theft-Detection-2' in YAML) work reliably
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
     main()

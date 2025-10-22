@@ -3,7 +3,7 @@ from ultralytics import YOLO # type: ignore
 import os
 
 # Get the directory where the script is located
-script_dir = os.path.dirname(__file__)
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # --- MODEL AND WEBCAM SETUP ---
 
@@ -13,7 +13,7 @@ model_path = os.path.join(script_dir, 'weights', 'best.pt')
 # Check if the model file exists
 if not os.path.exists(model_path):
     print(f"Error: Model file not found at '{model_path}'")
-    print("Please run 'python setup.py' first from the ATM_Face_Recognition directory to download the model weights.")
+    print("Please run 'python setup.py' first from the ATM_Face_Recognition directory to download the model weights, and then potentially 'python train.py'.")
     exit()
 
 # Load the YOLOv8 model

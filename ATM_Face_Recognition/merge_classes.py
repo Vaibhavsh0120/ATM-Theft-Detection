@@ -26,8 +26,14 @@ CLASS_REMAPPING = {
 }
 
 # Get the directory where the script is located
-script_dir = os.path.dirname(__file__)
+script_dir = os.path.dirname(os.path.abspath(__file__))
 dataset_root = os.path.join(script_dir, 'ATM-Theft-Detection-2') # Dataset folder relative to script
+
+# Check if dataset directory exists
+if not os.path.exists(dataset_root):
+     print(f"Error: Dataset directory not found at '{dataset_root}'")
+     print("Please run 'python setup.py' first from the ATM_Face_Recognition directory.")
+     exit()
 
 # Find all label files in train, valid, and test directories
 label_files = []
@@ -36,13 +42,8 @@ for split in ['train', 'valid', 'test']:
     path_pattern = os.path.join(dataset_root, split, 'labels', '*.txt')
     label_files.extend(glob.glob(path_pattern))
 
-if not os.path.exists(dataset_root):
-     print(f"Error: Dataset directory not found at '{dataset_root}'")
-     print("Please run 'python setup.py' first from the ATM_Face_Recognition directory.")
-     exit()
-
 if not label_files:
-    print(f"Warning: No label files found in '{dataset_root}'. Did you run `setup.py` to download the dataset first?")
+    print(f"Warning: No label files found in '{dataset_root}'. Is the dataset downloaded and populated?")
     exit()
 
 # Process each label file with a progress bar
@@ -71,6 +72,5 @@ for file_path in tqdm(label_files, desc="Merging Labels"):
             f.writelines(temp_lines)
     except Exception as e:
         print(f"Error processing file {file_path}: {e}")
-
 
 print(f"\n✅ Success! Processed and remapped labels in {len(label_files)} files within '{os.path.basename(dataset_root)}'.")
