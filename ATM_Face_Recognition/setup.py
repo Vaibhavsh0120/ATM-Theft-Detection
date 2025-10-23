@@ -89,7 +89,8 @@ def main():
         print("This might take several minutes depending on dataset size and connection speed...")
 
         # Initiate download
-        version_obj.download("yolov8", location=script_dir) # Download relative to script's dir
+        # *** MODIFIED LINE: Removed location=script_dir ***
+        version_obj.download("yolov8") # Download to current working dir (which is script_dir)
         print("Roboflow download command finished.") # Added message
 
         # --- MORE ROBUST VERIFICATION ---

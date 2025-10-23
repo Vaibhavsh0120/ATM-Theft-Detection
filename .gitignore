@@ -21,9 +21,11 @@ Thumbs.db
 .idea/
 .vscode/
 
+ATM_Action_Recognition/dataset
+
 # Downloaded datasets/weights (handle within specific projects if needed)
-# Example: ATM_Face_Recognition/ATM-Theft-Detection-2/
-# Example: ATM_Face_Recognition/weights/
+ATM_Face_Recognition/ATM-Theft-Detection-2/
+ATM_Face_Recognition/weights/
 
 # Ultralytics runs (handle within specific project)
-# Example: ATM_Face_Recognition/runs/
+ATM_Face_Recognition/runs/
