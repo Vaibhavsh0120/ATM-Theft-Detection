@@ -1,6 +1,6 @@
 # Virtual environments
 face_venv/
-action_venv/
+venv_action/
 venv/
 .venv/
 
@@ -22,6 +22,7 @@ Thumbs.db
 .vscode/
 
 ATM_Action_Recognition/dataset
+ATM_Action_Recognition/venv_action
 
 # Downloaded datasets/weights (handle within specific projects if needed)
 ATM_Face_Recognition/ATM-Theft-Detection-2/
@@ -29,3 +30,5 @@ ATM_Face_Recognition/weights/
 
 # Ultralytics runs (handle within specific project)
 ATM_Face_Recognition/runs/
+ATM_Face_Recognition/yolo11n.pt
+ATM_Face_Recognition/yolo8n.pt
