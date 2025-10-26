@@ -25,6 +25,7 @@ ATM_Action_Recognition/dataset
 ATM_Action_Recognition/venv_action
 
 # Downloaded datasets/weights (handle within specific projects if needed)
+ATM_Face_Recognition/ATM-Theft-Detection-3/
 ATM_Face_Recognition/ATM-Theft-Detection-2/
 ATM_Face_Recognition/weights/
 
