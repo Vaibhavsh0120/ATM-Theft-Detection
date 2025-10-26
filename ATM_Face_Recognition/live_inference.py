@@ -8,7 +8,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 # --- MODEL AND WEBCAM SETUP ---
 
 # Path to your downloaded custom-trained model (relative to this script)
-model_path = os.path.join(script_dir, 'weights', 'best_new.pt')
+model_path = os.path.join(script_dir, 'weights', 'best.pt')
 
 # Check if the model file exists
 if not os.path.exists(model_path):

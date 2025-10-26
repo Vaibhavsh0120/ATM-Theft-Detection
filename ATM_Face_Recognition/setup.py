@@ -64,7 +64,11 @@ def main():
         print("Error: ROBOFLOW_API_KEY not found in .env file (expected in the same directory as setup.py).")
         api_key = input("Please enter your Roboflow Private API Key to continue: ")
 
-    expected_dataset_dir_name = "ATM-Theft-Detection-3"
+    # --- UPDATED FOR VERSION 4 ---
+    expected_dataset_dir_name = "ATM-Theft-Detection-4"
+    dataset_version = 4
+    # -----------------------------
+
     dataset_dir = os.path.join(script_dir, expected_dataset_dir_name)
     download_success_flag = False 
 
@@ -73,8 +77,11 @@ def main():
         rf = Roboflow(api_key=api_key)
         print("Accessing workspace 'vaibhav-7tcrm'...")
         project = rf.workspace("vaibhav-7tcrm").project("atm-theft-detection-f8ezg")
-        print("Accessing project version 3...")
-        version_obj = project.version(3)
+        
+        # --- UPDATED FOR VERSION 4 ---
+        print(f"Accessing project version {dataset_version}...")
+        version_obj = project.version(dataset_version)
+        # -----------------------------
 
         if os.path.exists(dataset_dir):
             print(f"Dataset directory '{expected_dataset_dir_name}' already exists. Removing it to force fresh download.")
@@ -121,10 +128,6 @@ def main():
             print(f"\n--- An error occurred during the dataset download process ---")
             print(f"Error details: {e}")
             return
-
-        # -----------------------------------------------------------------
-        # --- FIXED VERIFICATION LOGIC ---
-        # -----------------------------------------------------------------
         
         print(f"\nVerifying dataset structure in: {final_dataset_path}...")
         
@@ -153,10 +156,6 @@ def main():
             print("The essential 'train' folder is missing from the dataset.")
             print("Please check your dataset export on Roboflow.")
             return
-
-        # -----------------------------------------------------------------
-        # --- END OF FIXED LOGIC ---
-        # -----------------------------------------------------------------
 
     except Exception as e:
         print(f"\n--- An error occurred during the dataset process ---")

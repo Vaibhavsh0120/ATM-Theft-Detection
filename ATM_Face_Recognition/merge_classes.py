@@ -2,50 +2,56 @@ import os
 import glob
 from tqdm import tqdm
 
-# This script merges the 16 classes from the dataset into 2 final classes.
+# This script merges the 21 classes from the dataset (version 4) into 2 final classes.
 # CLASS 0: Face_Covered
 # CLASS 1: Face_Uncovered
 
 #
-# --- THIS IS THE CORRECTED MAPPING ---
+# --- THIS IS THE CORRECTED MAPPING (based on data.yaml) ---
 #
-# Based on the 0-indexed order of your class list:
-# 0: balaclava, 1: concealing glasses, 2: cover, 3: face, 4: hand, 5: head,
-# 6: Helmet, 7: mask, 8: medicine mask, 9: non-concealing glasses, 10: normal,
-# 11: nothing, 12: person-with-mask, 13: person-without-mask, 14: scarf, 15: thief_mask
+# 0: Cuong, 1: Helmet, 2: Hung, 3: Lau-Ka-Fai, 4: Trung, 5: Tuan,
+# 6: Vu, 7: balaclava, 8: concealing glasses, 9: cover, 10: face,
+# 11: hand, 12: mask, 13: medicine mask, 14: non-concealing glasses,
+# 15: normal, 16: nothing, 17: person-with-mask,
+# 18: person-without-mask, 19: scarf, 20: thief_mask
 #
 CLASS_REMAPPING = {
     # --- Map to NEW ID 0 (Face_Covered) ---
-    0: 0,  # balaclava
-    1: 0,  # concealing glasses 
-    2: 0,  # cover 
-    4: 0,  # hand 
-    6: 0,  # Helmet
-    7: 0,  # mask
-    8: 0,  # medicine mask
-    12: 0, # person-with-mask
-    14: 0, # scarf
-    15: 0, # thief_mask
+    1: 0,  # Helmet
+    7: 0,  # balaclava
+    8: 0,  # concealing glasses
+    9: 0,  # cover
+    11: 0, # hand (assuming hand covers face)
+    12: 0, # mask
+    13: 0, # medicine mask
+    17: 0, # person-with-mask
+    19: 0, # scarf
+    20: 0, # thief_mask
 
     # --- Map to NEW ID 1 (Face_Uncovered) ---
-    3: 1,  # face
-    5: 1,  # head 
-    9: 1,  # non-concealing glasses
-    10: 1, # normal
-    11: 1, # nothing
-    13: 1, # person-without-mask
+    0: 1,  # Cuong
+    2: 1,  # Hung
+    3: 1,  # Lau-Ka-Fai
+    4: 1,  # Trung
+    5: 1,  # Tuan
+    6: 1,  # Vu
+    10: 1, # face
+    14: 1, # non-concealing glasses
+    15: 1, # normal
+    16: 1, # nothing
+    18: 1, # person-without-mask
 }
 
 # Get the directory where the script is located
 script_dir = os.path.dirname(os.path.abspath(__file__))
-# Assuming the dataset folder is still named 'ATM-Theft-Detection-2'
-# If it has a new name, change it here.
-dataset_root = os.path.join(script_dir, 'ATM-Theft-Detection-3') 
+
+# Point to the dataset folder from setup.py
+dataset_root = os.path.join(script_dir, 'ATM-Theft-Detection-4') 
 
 # Check if dataset directory exists
 if not os.path.exists(dataset_root):
     print(f"Error: Dataset directory not found at '{dataset_root}'")
-    print("Please ensure the dataset folder is in the same directory as this script.")
+    print("Please run 'python setup.py' first.")
     exit()
 
 # Find all label files in train, valid, and test directories
