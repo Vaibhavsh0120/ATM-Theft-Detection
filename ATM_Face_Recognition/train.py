@@ -15,7 +15,7 @@ def main():
     pretrained_model = 'yolov8n.pt'
 
     # Training parameters
-    epochs = 15
+    epochs = 80
     img_size = 640
 
     # Automatically select device: prioritizes GPU if available, otherwise uses CPU
