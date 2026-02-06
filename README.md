@@ -1,7 +1,7 @@
 <h1 align="center">🚨 Real-Time ATM Theft Detection with YOLOv8</h1>
 
 <p align="center">
-  <img src="https://media.licdn.com/dms/image/sync/v2/D5627AQEQ41fkNOIq8A/articlesh-are-shrink_800/articleshare-shrink_800/0/1722446223640?e=2147483647&v=beta&t=IpkZR8u2Y5LepFrMrfZo-UjZLkOoFPgaiXqtNU9WUMc" alt="ATM Theft Detection Demo" width="700"/>
+  <img src="https://media.licdn.com/dms/image/sync/v2/D5627AQEQ41fkNOIq8A/articleshare-shrink_800/articleshare-shrink_800/0/1722446223640?e=2147483647&v=beta&t=IpkZR8u2Y5LepFrMrfZo-UjZLkOoFPgaiXqtNU9WUMc" alt="ATM Theft Detection Demo" width="700"/>
 </p>
 
 <p align="center">
@@ -150,4 +150,3 @@ New weights will be saved in `runs/detect/train/weights/`.
 ## 🙌 Contributing
 
 Pull requests and suggestions are welcome! Please open an issue for major changes.
-
