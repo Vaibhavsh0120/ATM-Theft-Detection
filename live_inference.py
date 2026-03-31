@@ -20,7 +20,7 @@ if not os.path.exists(model_path):
 model = YOLO(model_path)
 
 # Open a connection to the webcam (0 is usually the default webcam)
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 # Check if the webcam opened successfully
 if not cap.isOpened():

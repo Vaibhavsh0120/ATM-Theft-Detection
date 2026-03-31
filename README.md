@@ -27,7 +27,7 @@ The original dataset had **13 classes**. To simplify detection, these were merge
 
 ### 1. Prerequisites
 
-- Python 3.8+
+- Python 3.11
 - NVIDIA GPU with CUDA (recommended for real-time performance)
 
 ### 2. Setup
