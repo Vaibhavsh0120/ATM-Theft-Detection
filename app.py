@@ -30,19 +30,63 @@ THEME = gr.themes.Soft(
     primary_hue="amber",
     secondary_hue="rose",
     neutral_hue="stone",
+).set(
+    body_background_fill="#f8f1e7",
+    body_background_fill_dark="#f8f1e7",
+    background_fill_primary="#f8f1e7",
+    background_fill_primary_dark="#f8f1e7",
+    background_fill_secondary="#fffaf6",
+    background_fill_secondary_dark="#fffaf6",
+    block_background_fill="#fffaf6",
+    block_background_fill_dark="#fffaf6",
+    panel_background_fill="#fffaf6",
+    panel_background_fill_dark="#fffaf6",
+    body_text_color="#221711",
+    body_text_color_dark="#221711",
+    body_text_color_subdued="#4d3d31",
+    body_text_color_subdued_dark="#4d3d31",
+    block_title_text_color="#2b1b14",
+    block_title_text_color_dark="#2b1b14",
+    block_label_text_color="#2b1b14",
+    block_label_text_color_dark="#2b1b14",
+    block_info_text_color="#4d3d31",
+    block_info_text_color_dark="#4d3d31",
+    accordion_text_color="#2b1b14",
+    accordion_text_color_dark="#2b1b14",
+    checkbox_label_text_color="#221711",
+    checkbox_label_text_color_dark="#221711",
+    checkbox_label_text_color_selected="#2b1b14",
+    checkbox_label_text_color_selected_dark="#2b1b14",
+    table_text_color="#221711",
+    table_text_color_dark="#221711",
+    link_text_color="#6e241d",
+    link_text_color_dark="#6e241d",
+    link_text_color_active="#6e241d",
+    link_text_color_active_dark="#6e241d",
+    link_text_color_hover="#9b392a",
+    link_text_color_hover_dark="#9b392a",
+    link_text_color_visited="#6e241d",
+    link_text_color_visited_dark="#6e241d",
+    button_primary_text_color="#fff7f0",
+    button_primary_text_color_dark="#fff7f0",
+    button_primary_text_color_hover="#fff7f0",
+    button_primary_text_color_hover_dark="#fff7f0",
+    button_secondary_text_color="#2b1b14",
+    button_secondary_text_color_dark="#2b1b14",
+    button_secondary_text_color_hover="#2b1b14",
+    button_secondary_text_color_hover_dark="#2b1b14",
+    input_placeholder_color="#6b5748",
+    input_placeholder_color_dark="#6b5748",
 )
 
 CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 
 :root {
-  --page-bg:
-    radial-gradient(circle at top left, rgba(255, 196, 125, 0.24), transparent 30%),
-    radial-gradient(circle at top right, rgba(164, 52, 58, 0.18), transparent 26%),
-    linear-gradient(180deg, #f8f1e7 0%, #f2e4d3 54%, #ead5c1 100%);
-  --card-bg: rgba(255, 251, 246, 0.82);
+  --page-bg: linear-gradient(180deg, #f8f1e7 0%, #f1e4d4 56%, #ead7c4 100%);
+  --card-bg: #fffaf6;
   --card-border: rgba(123, 67, 42, 0.14);
-  --card-shadow: 0 22px 50px rgba(98, 53, 32, 0.10);
+  --card-shadow: 0 10px 24px rgba(98, 53, 32, 0.08);
   --accent: #9b392a;
   --accent-dark: #6e241d;
   --accent-soft: rgba(155, 57, 42, 0.10);
@@ -55,12 +99,19 @@ CSS = """
 
 html,
 body,
+#root {
+  background: var(--page-bg);
+}
+
+html,
+body,
 #root,
 .gradio-container {
-  background: var(--page-bg);
+  background: var(--page-bg) !important;
   color: var(--text-main);
   font-family: 'IBM Plex Sans', ui-sans-serif, sans-serif;
-  text-rendering: optimizeLegibility;
+  text-rendering: auto;
+  color-scheme: light;
 }
 
 html,
@@ -84,6 +135,34 @@ body {
   padding-left: clamp(16px, 2vw, 28px) !important;
   padding-right: clamp(16px, 2vw, 28px) !important;
   padding-bottom: 40px !important;
+  --body-background-fill: #f8f1e7;
+  --body-background-fill-dark: #f8f1e7;
+  --background-fill-primary: #f8f1e7;
+  --background-fill-primary-dark: #f8f1e7;
+  --background-fill-secondary: #fffaf6;
+  --background-fill-secondary-dark: #fffaf6;
+  --block-background-fill: #fffaf6;
+  --block-background-fill-dark: #fffaf6;
+  --panel-background-fill: #fffaf6;
+  --panel-background-fill-dark: #fffaf6;
+  --body-text-color: var(--text-main);
+  --body-text-color-subdued: var(--text-muted);
+  --block-title-text-color: var(--text-strong);
+  --block-label-text-color: var(--text-strong);
+  --block-info-text-color: var(--text-muted);
+  --accordion-text-color: var(--text-strong);
+  --checkbox-label-text-color: var(--text-main);
+  --checkbox-label-text-color-selected: var(--text-strong);
+  --table-text-color: var(--text-main);
+  --link-text-color: var(--accent-dark);
+  --link-text-color-active: var(--accent-dark);
+  --link-text-color-hover: var(--accent);
+  --link-text-color-visited: var(--accent-dark);
+  --button-primary-text-color: #fff7f0;
+  --button-primary-text-color-hover: #fff7f0;
+  --button-secondary-text-color: var(--text-strong);
+  --button-secondary-text-color-hover: var(--text-strong);
+  --input-placeholder-color: var(--text-soft);
 }
 
 h1, h2, h3, .hero-title, .metric-value {
@@ -100,7 +179,6 @@ select {
 
 .gradio-container p,
 .gradio-container li,
-.gradio-container span,
 .gradio-container label,
 .gradio-container legend,
 .gradio-container .prose,
@@ -146,27 +224,27 @@ select {
   color: var(--text-soft) !important;
 }
 
+.gradio-container a,
+.gradio-container a:visited {
+  color: var(--accent-dark) !important;
+}
+
+.gradio-container a:hover {
+  color: var(--accent) !important;
+}
+
 .hero-shell {
   position: relative;
   overflow: hidden;
   padding: 28px 30px;
   border: 1px solid rgba(147, 73, 43, 0.18);
   border-radius: 28px;
-  background:
-    linear-gradient(135deg, rgba(255, 244, 226, 0.94), rgba(255, 248, 240, 0.88)),
-    linear-gradient(120deg, rgba(197, 141, 42, 0.08), rgba(155, 57, 42, 0.08));
+  background: linear-gradient(180deg, #fff6eb 0%, #fffaf5 100%);
   box-shadow: var(--card-shadow);
 }
 
 .hero-shell::after {
-  content: "";
-  position: absolute;
-  inset: auto -30px -40px auto;
-  width: 220px;
-  height: 220px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(155, 57, 42, 0.18), transparent 68%);
-  pointer-events: none;
+  content: none;
 }
 
 .hero-kicker {
@@ -209,7 +287,7 @@ select {
 .metric-card {
   padding: 18px 18px 16px;
   border-radius: 20px;
-  background: rgba(255, 252, 248, 0.72);
+  background: #fffaf6;
   border: 1px solid rgba(123, 67, 42, 0.10);
 }
 
@@ -241,7 +319,6 @@ select {
   border-radius: 24px;
   background: var(--card-bg);
   box-shadow: var(--card-shadow);
-  backdrop-filter: blur(14px);
 }
 
 .dashboard-card {
@@ -263,7 +340,7 @@ select {
   align-items: flex-start;
   padding: 14px 14px;
   border-radius: 18px;
-  background: rgba(255, 247, 239, 0.8);
+  background: #fff8f2;
   border: 1px solid rgba(123, 67, 42, 0.08);
 }
 
@@ -296,7 +373,7 @@ select {
 .guide-strip {
   padding: 14px 16px;
   border-radius: 18px;
-  background: linear-gradient(90deg, rgba(197, 141, 42, 0.15), rgba(155, 57, 42, 0.08));
+  background: #f5e8d6;
   border: 1px solid rgba(155, 57, 42, 0.10);
   color: var(--text-main);
 }
@@ -309,7 +386,7 @@ button.primary,
 .primary {
   background: linear-gradient(135deg, #b3442f, #7a261d) !important;
   border: none !important;
-  box-shadow: 0 14px 28px rgba(122, 38, 29, 0.24) !important;
+  box-shadow: 0 8px 16px rgba(122, 38, 29, 0.16) !important;
   color: #fff7f0 !important;
   font-weight: 600 !important;
 }
@@ -318,6 +395,14 @@ button.secondary {
   border-color: rgba(123, 67, 42, 0.18) !important;
   color: var(--text-strong) !important;
   background: rgba(255, 250, 246, 0.92) !important;
+}
+
+button.primary *,
+.primary *,
+button.secondary *,
+.gr-tab-nav button *,
+.gradio-container [role="tab"] * {
+  color: inherit !important;
 }
 
 .gr-tab-nav {
@@ -367,6 +452,12 @@ button.secondary {
 .gradio-container .gr-markdown p,
 .gradio-container .gr-markdown li {
   color: var(--text-muted) !important;
+}
+
+.gradio-container .gr-markdown strong,
+.gradio-container .gr-markdown th,
+.gradio-container .gr-markdown [data-testid="block-label"] {
+  color: var(--text-strong) !important;
 }
 
 .gradio-container table {
