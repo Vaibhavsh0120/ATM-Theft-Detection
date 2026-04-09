@@ -1,0 +1,52 @@
+﻿--extra-index-url https://download.pytorch.org/whl/cu121
+
+# --- Core ML/Data Libraries ---
+torch==2.5.1+cu121
+torchaudio==2.5.1+cu121
+torchvision==0.20.1+cu121
+numpy==2.2.6
+PyYAML==6.0.3
+pillow==11.3.0
+matplotlib==3.10.7
+scipy==1.16.2
+
+# --- Object Detection (YOLOv8 & Setup) ---
+ultralytics==8.3.211
+ultralytics-thop==2.0.17
+roboflow==1.2.10
+python-dotenv==1.1.1 # For loading .env in bootstrap_assets.py
+
+# --- Video/Image Handling ---
+opencv-python==4.12.0.88 # Keep this for webcam access
+
+# --- Utility Libraries ---
+tqdm==4.67.1
+requests==2.32.5
+certifi==2025.10.5
+charset-normalizer==3.4.3
+idna==3.7
+urllib3==2.5.0
+six==1.17.0
+python-dateutil==2.9.0.post0
+packaging==25.0
+typing_extensions==4.15.0
+colorama==0.4.6
+contourpy==1.3.3 # Matplotlib dependency
+cycler==0.12.1 # Matplotlib dependency
+filelock==3.20.0
+filetype==1.2.0
+fonttools==4.60.1 # Matplotlib dependency
+fsspec==2025.9.0
+Jinja2==3.1.6
+kiwisolver==1.4.9 # Matplotlib dependency
+MarkupSafe==3.0.3 # Jinja2 dependency
+mpmath==1.3.0 # Sympy dependency
+networkx==3.5
+pi_heif==1.1.1 # Pillow plugin
+pillow-avif-plugin==1.5.2 # Pillow plugin
+psutil==7.1.0
+pyparsing==3.2.5 # Matplotlib dependency
+requests-toolbelt==1.0.0 # Roboflow dependency
+setuptools==80.9.0
+sympy==1.13.1
+

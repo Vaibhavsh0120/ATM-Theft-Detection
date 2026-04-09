@@ -21,9 +21,20 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Local datasets and training outputs
-ATM-Theft-Detection-4/
-runs/
-yolov8n.pt
-weights/best_saved_model/
 .runtime/
+deploy/huggingface-space/.runtime/
+
+# Local datasets and generated training artifacts
+training/data/*
+!training/data/.gitkeep
+training/models/pretrained/*
+!training/models/pretrained/.gitkeep
+training/models/exports/*
+!training/models/exports/.gitkeep
+training/outputs/*
+!training/outputs/.gitkeep
+
+# Optional published exports
+deploy/huggingface-model/exports/*
+!deploy/huggingface-model/exports/.gitkeep
+/yolo11n.pt

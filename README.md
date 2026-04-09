@@ -1,122 +1,223 @@
----
-title: ATM Theft Detection
-emoji: "🛡️"
-colorFrom: yellow
-colorTo: red
-sdk: gradio
-sdk_version: "6.11.0"
-python_version: "3.11"
-app_file: app.py
-suggested_hardware: cpu-basic
-short_description: YOLOv8 ATM face-cover detection demo.
-tags:
-  - computer-vision
-  - object-detection
-  - yolo
-  - gradio
-  - security
-fullWidth: true
-pinned: false
-startup_duration_timeout: 1h
+<h1 align="center">Real-Time ATM Theft Detection with YOLOv8</h1>
+
+<p align="center">
+  <img src="https://media.licdn.com/dms/image/sync/v2/D5627AQEQ41fkNOIq8A/articleshare-shrink_800/articleshare-shrink_800/0/1722446223640?e=2147483647&amp;v=beta&amp;t=IpkZR8u2Y5LepFrMrfZo-UjZLkOoFPgaiXqtNU9WUMc" alt="ATM Theft Detection Demo" width="700"/>
+</p>
+
+<p align="center">
+  <b>Detect suspicious ATM activity in real time using a custom YOLOv8n model trained to separate covered and uncovered faces.</b>
+</p>
+
 ---
 
-# ATM Theft Detection
+## Overview
 
-This repository contains a custom YOLOv8 model for ATM security monitoring. The model detects two classes:
+This project focuses on ATM security monitoring with a custom YOLOv8 pipeline built around a Roboflow dataset and a lightweight YOLOv8n detector. The repository is structured as a small monorepo so you can:
 
-- `Face_Covered`
-- `Face_Uncovered`
+- download and prepare the dataset locally
+- train and resume YOLOv8 runs
+- run webcam inference on desktop
+- package the latest checkpoint for a Hugging Face Model repo
+- push both the Hugging Face Model repo and Hugging Face Space repo with one command
 
-The repo is now structured so it can be deployed directly as a Hugging Face Gradio Space while still keeping the original local training and quantization scripts.
+### Class Merging
 
-## Hugging Face Space Setup
+The current Roboflow export contains **21 source classes**. They are remapped into two final detection classes by [`training/scripts/remap_labels.py`](training/scripts/remap_labels.py):
 
-The Space entry point is [`app.py`](app.py). The Space metadata is the YAML block at the top of this [`README.md`](README.md), which Hugging Face reads automatically.
+- **Face_Covered:** `Helmet`, `balaclava`, `concealing glasses`, `cover`, `hand`, `mask`, `medicine mask`, `person-with-mask`, `scarf`, `thief_mask`
+- **Face_Uncovered:** `Cuong`, `Hung`, `Lau-Ka-Fai`, `Trung`, `Tuan`, `Vu`, `face`, `non-concealing glasses`, `normal`, `nothing`, `person-without-mask`
 
-This setup assumes:
+---
 
-- the model weights are available at [`weights/best.pt`](weights/best.pt)
-- the Space installs Python dependencies from [`requirements.txt`](requirements.txt)
-- inference runs on CPU by default, which fits `cpu-basic`
+## Quick Start
 
-### Deploy
+### 1. Prerequisites
 
-1. Create a new Hugging Face Space and choose the `Gradio` SDK.
-2. Push this repository to the Space repo.
-3. Hugging Face will read the YAML front matter in [`README.md`](README.md), install [`requirements.txt`](requirements.txt), and launch [`app.py`](app.py).
+- Python 3.11
+- NVIDIA GPU with CUDA recommended for training speed
+- Git LFS recommended if you plan to publish model weights
 
-The web app supports:
-
-- photo inference
-- short video inference
-- live browser webcam inference
-
-## Local Development
-
-Use the single [`requirements.txt`](requirements.txt) file for both the Hugging Face Space and local development:
+### 2. Clone And Install
 
 ```bash
+git clone https://github.com/Vaibhavsh0120/ATM-Theft-Detection.git
+cd ATM-Theft-Detection
 python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
 ```
 
-For the legacy desktop OpenCV webcam script in [`live_inference.py`](live_inference.py), replace `opencv-python-headless` with `opencv-python` in your local environment if you need native windowed webcam display.
+Activate the environment and install the training dependencies:
 
-## Original Training Workflow
+```bash
+# Windows
+.\.venv\Scripts\activate
 
-### 1. Configure Roboflow access
+# macOS/Linux
+source .venv/bin/activate
 
-Copy [`.env.example`](.env.example) to `.env` and set:
+pip install -r training/requirements.txt
+```
+
+### 3. Roboflow API Key And Dataset
+
+1. Create a root `.env` file from `.env.example`.
+2. Add your Roboflow private API key:
+
+   ```text
+   ROBOFLOW_API_KEY="YOUR_API_KEY"
+   ```
+
+3. Download the dataset and published model assets:
+
+   ```bash
+   python training/scripts/bootstrap_assets.py
+   ```
+
+4. Remap the source labels into the final two-class dataset:
+
+   ```bash
+   python training/scripts/remap_labels.py
+   ```
+
+5. Start training:
+
+   ```bash
+   python training/scripts/train_yolo.py --epochs 5
+   ```
+
+6. Resume an interrupted run when needed:
+
+   ```bash
+   python training/scripts/train_yolo.py --resume
+   ```
+
+Dataset source: [Roboflow Universe - ATM Theft Detection](https://universe.roboflow.com/vaibhav-7tcrm/atm-theft-detection-f8ezg)
+
+---
+
+## Project Structure
 
 ```text
-ROBOFLOW_API_KEY="YOUR_API_KEY"
+ATM-THEFT-DETECTION/
+├── .env.example
+├── README.md
+├── deploy/
+│   ├── huggingface-model/      # Standalone Hugging Face Model repo contents
+│   └── huggingface-space/      # Standalone Hugging Face Space repo contents
+├── docs/
+│   └── publishing.md
+├── scripts/
+│   └── push_hf.py              # Refresh deploy assets and push to Hugging Face
+└── training/
+    ├── configs/
+    ├── data/                   # Downloaded Roboflow dataset
+    ├── models/
+    │   ├── exports/
+    │   └── pretrained/
+    ├── outputs/                # YOLO training runs
+    ├── requirements.txt
+    └── scripts/
+        ├── bootstrap_assets.py
+        ├── remap_labels.py
+        ├── train_yolo.py
+        ├── export_tflite.py
+        ├── run_live_inference.py
+        └── run_live_tflite.py
 ```
 
-### 2. Download dataset and model assets
+---
+
+## Usage
+
+### 1. Train A Fresh Model
 
 ```bash
-python setup.py
+python training/scripts/train_yolo.py --epochs 80
 ```
 
-This downloads the Roboflow dataset and ensures the model weights are available.
+Fresh runs are written to incrementing folders such as:
 
-### 3. Merge classes
+```text
+training/outputs/runs/detect/train/
+training/outputs/runs/detect/train2/
+training/outputs/runs/detect/train3/
+```
+
+### 2. Resume From The Last Checkpoint
 
 ```bash
-python merge_classes.py
+python training/scripts/train_yolo.py --resume
 ```
 
-This converts the source dataset into the two final labels used by the model.
-
-### 4. Train
+You can also resume a specific checkpoint:
 
 ```bash
-python train.py
+python training/scripts/train_yolo.py --resume-from "training/outputs/runs/detect/train2/weights/last.pt"
 ```
 
-### 5. Local webcam inference
+### 3. Live Webcam Inference
 
-If you want the original desktop webcam loop, keep `opencv-python` installed locally and run:
+Run desktop webcam inference with the latest trained model or the published fallback checkpoint:
 
 ```bash
-python live_inference.py
+python training/scripts/run_live_inference.py
 ```
 
-## Repository Layout
+If you want TFLite export and TFLite webcam inference:
 
-- [`app.py`](app.py): Hugging Face Space Gradio app
-- [`requirements.txt`](requirements.txt): shared dependencies for the Space and local workflows
-- [`setup.py`](setup.py): Roboflow dataset download and weight bootstrap
-- [`merge_classes.py`](merge_classes.py): class remapping for the dataset
-- [`train.py`](train.py): YOLOv8 training script
-- [`live_inference.py`](live_inference.py): local OpenCV webcam inference
-- [`live_quantize.py`](live_quantize.py): local TFLite webcam inference
-- [`quantize.py`](quantize.py): model export for quantized deployment
-- [`check_quantization.py`](check_quantization.py): TFLite quantization verification
+```bash
+python training/scripts/export_tflite.py
+python training/scripts/verify_tflite.py
+python training/scripts/run_live_tflite.py
+```
+
+### 4. Publish To Hugging Face
+
+Add these optional values to your root `.env`:
+
+```text
+HF_MODEL_REPO_ID="your-username/your-model-repo"
+HF_SPACE_REPO_ID="your-username/your-space-repo"
+```
+
+Log in once:
+
+```bash
+huggingface-cli login
+```
+
+Then push both standalone deploy targets in one command:
+
+```bash
+python scripts/push_hf.py
+```
+
+If you want the Space repo to include `weights/best.pt` directly instead of downloading from the model repo:
+
+```bash
+python scripts/push_hf.py --bundle-space-model
+```
+
+---
+
+## Validation Snapshot
+
+Recent local 5-epoch smoke-run results:
+
+- **Face_Covered:** Precision `0.894`, Recall `0.827`, mAP50 `0.898`, mAP50-95 `0.558`
+- **Face_Uncovered:** Precision `0.823`, Recall `0.800`, mAP50 `0.855`, mAP50-95 `0.599`
+
+These numbers come from a short verification run, not a final long-training benchmark.
+
+---
 
 ## Notes
 
-- The Hugging Face Space path is inference-only. Training and Roboflow dataset download are not part of the Space startup.
-- The current model file is small enough to live in the repo directly. If future weights grow substantially, move them to a dedicated model repo or Git LFS.
-- Short video clips are the best fit for `cpu-basic`; long videos will be slow.
+- [`training/scripts/remap_labels.py`](training/scripts/remap_labels.py) mutates label files in place once per fresh dataset download.
+- If you need to remap again, rerun `python training/scripts/bootstrap_assets.py` first to restore a clean Roboflow export.
+- The Hugging Face Space can either bundle weights locally or load them from the Hugging Face Model repo through `HF_MODEL_REPO_ID`.
+
+---
+
+## Contributing
+
+Pull requests and suggestions are welcome. Open an issue first for major changes so the scope is clear before implementation.

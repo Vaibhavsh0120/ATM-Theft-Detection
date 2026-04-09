@@ -1,0 +1,14 @@
+# Keep split paths explicit and relative to this file. Ultralytics rebases a
+# relative `path:` through its configured datasets directory, which breaks this
+# monorepo layout.
+train: ../data/ATM-Theft-Detection-4/train/images
+val: ../data/ATM-Theft-Detection-4/valid/images
+test: ../data/ATM-Theft-Detection-4/test/images
+
+# Number of classes
+nc: 2
+
+# Merged class names
+names:
+  0: Face_Covered
+  1: Face_Uncovered

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Final, TypeAlias
 
 ROOT: Final[Path] = Path(__file__).resolve().parent
+REPO_ROOT: Final[Path] = ROOT.parents[1]
 APP_CACHE_DIR = ROOT / ".runtime"
 APP_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 os.environ.setdefault("YOLO_CONFIG_DIR", str(APP_CACHE_DIR))
@@ -21,9 +22,13 @@ from ultralytics.engine.results import Results
 ImagePrediction: TypeAlias = tuple[PILImage.Image | None, str]
 VideoPrediction: TypeAlias = tuple[str | None, str]
 
-DEFAULT_MODEL_PATH: Final[Path] = ROOT / "weights" / "best.pt"
 MODEL_PATH_ENV = os.getenv("MODEL_PATH")
-MODEL_PATH: Final[Path] = Path(MODEL_PATH_ENV) if MODEL_PATH_ENV else DEFAULT_MODEL_PATH
+HF_MODEL_REPO_ID = os.getenv("HF_MODEL_REPO_ID")
+HF_MODEL_FILENAME = os.getenv("HF_MODEL_FILENAME", "weights/best.pt")
+DEFAULT_LOCAL_MODEL_CANDIDATES: Final[tuple[Path, ...]] = (
+    ROOT / "weights" / "best.pt",
+    REPO_ROOT / "deploy" / "huggingface-model" / "weights" / "best.pt",
+)
 TITLE: Final[str] = "ATM Theft Detection"
 
 THEME = gr.themes.Soft(
@@ -535,12 +540,39 @@ LEGEND_HTML = """
 
 
 @lru_cache(maxsize=1)
-def load_model() -> YOLO:
-    if not MODEL_PATH.exists():
-        raise FileNotFoundError(
-            f"Model weights not found at '{MODEL_PATH}'. Expected 'weights/best.pt' in the repo."
+def resolve_model_path() -> Path:
+    if MODEL_PATH_ENV:
+        explicit_model_path = Path(MODEL_PATH_ENV).expanduser()
+        if explicit_model_path.exists():
+            return explicit_model_path
+        raise FileNotFoundError(f"MODEL_PATH points to a missing file: '{explicit_model_path}'.")
+
+    for candidate in DEFAULT_LOCAL_MODEL_CANDIDATES:
+        if candidate.exists():
+            return candidate
+
+    if HF_MODEL_REPO_ID:
+        from huggingface_hub import hf_hub_download
+
+        hub_cache_dir = APP_CACHE_DIR / "hf-model-cache"
+        return Path(
+            hf_hub_download(
+                repo_id=HF_MODEL_REPO_ID,
+                filename=HF_MODEL_FILENAME,
+                cache_dir=str(hub_cache_dir),
+            )
         )
-    return YOLO(str(MODEL_PATH))
+
+    searched_paths = ", ".join(str(path) for path in DEFAULT_LOCAL_MODEL_CANDIDATES)
+    raise FileNotFoundError(
+        "Model weights were not found. Set MODEL_PATH, place 'weights/best.pt' in the Space repo, "
+        f"or configure HF_MODEL_REPO_ID. Checked: {searched_paths}."
+    )
+
+
+@lru_cache(maxsize=1)
+def load_model() -> YOLO:
+    return YOLO(str(resolve_model_path()))
 
 
 def build_detection_summary(result: Results, heading: str | None = None) -> str:
