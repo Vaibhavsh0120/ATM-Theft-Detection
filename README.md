@@ -1,152 +1,122 @@
-<h1 align="center">🚨 Real-Time ATM Theft Detection with YOLOv8</h1>
-
-<p align="center">
-  <img src="https://media.licdn.com/dms/image/sync/v2/D5627AQEQ41fkNOIq8A/articleshare-shrink_800/articleshare-shrink_800/0/1722446223640?e=2147483647&v=beta&t=IpkZR8u2Y5LepFrMrfZo-UjZLkOoFPgaiXqtNU9WUMc" alt="ATM Theft Detection Demo" width="700"/>
-</p>
-
-<p align="center">
-  <b>Detect suspicious ATM activities in real-time using a custom YOLOv8n model, focusing on individuals with covered faces.</b>
-</p>
-
+---
+title: ATM Theft Detection
+emoji: "🛡️"
+colorFrom: yellow
+colorTo: red
+sdk: gradio
+sdk_version: "6.11.0"
+python_version: "3.11"
+app_file: app.py
+suggested_hardware: cpu-basic
+short_description: Detect covered and uncovered faces in ATM footage with a custom YOLOv8 model.
+tags:
+  - computer-vision
+  - object-detection
+  - yolo
+  - gradio
+  - security
+fullWidth: true
+pinned: false
+startup_duration_timeout: 1h
 ---
 
-## 📖 Overview
+# ATM Theft Detection
 
-This project aims to enhance ATM security by automatically detecting potential threats, such as individuals concealing their identity. The YOLOv8n model is trained on a custom Roboflow dataset and optimized for fast, real-time inference on webcam feeds.
+This repository contains a custom YOLOv8 model for ATM security monitoring. The model detects two classes:
 
-### 🎭 Class Merging
+- `Face_Covered`
+- `Face_Uncovered`
 
-The original dataset had **13 classes**. To simplify detection, these were merged into two categories using `merge_classes.py`:
+The repo is now structured so it can be deployed directly as a Hugging Face Gradio Space while still keeping the original local training and quantization scripts.
 
-- **Face_Covered:** `balaclava`, `concealing glasses`, `cover`, `hand`, `mask`, `medicine mask`, `person-with-mask`, `scarf`, `thief_mask`
-- **Face_Uncovered:** `non-concealing glasses`, `normal`, `nothing`, `person-without-mask`
+## Hugging Face Space Setup
 
----
+The Space entry point is [`app.py`](app.py). The Space metadata is the YAML block at the top of this [`README.md`](README.md), which Hugging Face reads automatically.
 
-## 🚀 Quick Start
+This setup assumes:
 
-### 1. Prerequisites
+- the model weights are available at [`weights/best.pt`](weights/best.pt)
+- the Space installs Python dependencies from [`requirements.txt`](requirements.txt)
+- inference runs on CPU by default, which fits `cpu-basic`
 
-- Python 3.11
-- NVIDIA GPU with CUDA (recommended for real-time performance)
+### Deploy
 
-### 2. Setup
+1. Create a new Hugging Face Space and choose the `Gradio` SDK.
+2. Push this repository to the Space repo.
+3. Hugging Face will read the YAML front matter in [`README.md`](README.md), install [`requirements.txt`](requirements.txt), and launch [`app.py`](app.py).
 
-Clone the repository and enter the project directory:
+The web app supports:
+
+- photo inference
+- short video inference
+- live browser webcam inference
+
+## Local Development
+
+Use the single [`requirements.txt`](requirements.txt) file for both the Hugging Face Space and local development:
 
 ```bash
-git clone https://github.com/Vaibhav0120/ATM-Theft-Detection.git
-cd ATM-Theft-Detection
-```
-
-Create a virtual environment and install dependencies:
-
-```bash
-python -m venv venv
-# Windows
-.\venv\Scripts\activate
-# macOS/Linux
-source venv/bin/activate
+python -m venv .venv
+.venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 3. Roboflow API Key & Dataset
+For the legacy desktop OpenCV webcam script in [`live_inference.py`](live_inference.py), replace `opencv-python-headless` with `opencv-python` in your local environment if you need native windowed webcam display.
 
-1. [Sign up at Roboflow](https://roboflow.com/)
-2. Get your API key from workspace settings.
-3. Copy `.env.example` to `.env` and add your API key:
-    ```
-    ROBOFLOW_API_KEY="YOUR_API_KEY"
-    ```
-4. Download dataset and model weights:
-    ```bash
-    python setup.py
-    ```
-5. [View dataset on Roboflow](https://universe.roboflow.com/vaibhav-7tcrm/atm-theft-detection-f8ezg)
+## Original Training Workflow
 
----
+### 1. Configure Roboflow access
 
-## 📂 Project Structure
+Copy [`.env.example`](.env.example) to `.env` and set:
 
-```
-ATM-THEFT-DETECTION/
-├── .env                # Your API key (local only)
-├── .env.example        # Template for .env
-├── .gitignore
-├── README.md
-├── requirements.txt
-├── setup.py            # Downloads dataset & weights
-├── train.py            # Model training script
-├── live_inference.py   # Real-time webcam inference
-├── merge_classes.py    # Merges original classes
-│
-├── ATM-Theft-Detection-2/ # Dataset (created by setup.py)
-│   ├── data.yaml
-│   ├── train/
-│   ├── valid/
-│   └── test/
-│
-└── weights/
-    └── best.pt         # Pre-trained model weights
+```text
+ROBOFLOW_API_KEY="YOUR_API_KEY"
 ```
 
----
-
-## 💻 Usage
-
-### 1. Live Inference (Pre-trained Model)
-
-**Step 1:** Switch to full OpenCV for webcam support:
+### 2. Download dataset and model assets
 
 ```bash
-pip uninstall opencv-python-headless
-pip install opencv-python
+python setup.py
 ```
 
-**Step 2:** Run live inference:
+This downloads the Roboflow dataset and ensures the model weights are available.
 
-```bash
-python live_inference.py
-```
-
-A window will show your webcam feed with real-time detections. Press **'q'** to exit.
-
-> **Tip:** Use separate Python environments for `opencv-python` and `opencv-python-headless` if needed.
-
-### 2. Train Your Own Model
-
-**Step 1:** Complete setup steps above.
-
-**Step 2:** Merge classes:
+### 3. Merge classes
 
 ```bash
 python merge_classes.py
 ```
 
-**Step 3:** (Optional) Edit `train.py` for hyperparameters (epochs, image size, device).
+This converts the source dataset into the two final labels used by the model.
 
-**Step 4:** Start training:
+### 4. Train
 
 ```bash
 python train.py
 ```
 
-New weights will be saved in `runs/detect/train/weights/`.
+### 5. Local webcam inference
 
-**Step 5:** Replace `weights/best.pt` with your new model.
+If you want the original desktop webcam loop, keep `opencv-python` installed locally and run:
 
-**Step 6:** Run live inference as above.
+```bash
+python live_inference.py
+```
 
----
+## Repository Layout
 
-## 📊 Model Performance
+- [`app.py`](app.py): Hugging Face Space Gradio app
+- [`requirements.txt`](requirements.txt): shared dependencies for the Space and local workflows
+- [`setup.py`](setup.py): Roboflow dataset download and weight bootstrap
+- [`merge_classes.py`](merge_classes.py): class remapping for the dataset
+- [`train.py`](train.py): YOLOv8 training script
+- [`live_inference.py`](live_inference.py): local OpenCV webcam inference
+- [`live_quantize.py`](live_quantize.py): local TFLite webcam inference
+- [`quantize.py`](quantize.py): model export for quantized deployment
+- [`check_quantization.py`](check_quantization.py): TFLite quantization verification
 
-- **mAP@50:** 94.5%
-- **Precision:** 94.0%
-- **Recall:** 88.0%
+## Notes
 
----
-
-## 🙌 Contributing
-
-Pull requests and suggestions are welcome! Please open an issue for major changes.
+- The Hugging Face Space path is inference-only. Training and Roboflow dataset download are not part of the Space startup.
+- The current model file is small enough to live in the repo directly. If future weights grow substantially, move them to a dedicated model repo or Git LFS.
+- Short video clips are the best fit for `cpu-basic`; long videos will be slow.

@@ -1,10 +1,10 @@
 # Virtual environments
+.venv/
+venv/
 face_venv/
 venv_action/
-venv/
-.venv/
 
-# Environment file with secrets (if kept in root, otherwise adjust)
+# Secrets
 .env
 
 # Python cache files
@@ -13,25 +13,17 @@ __pycache__/
 *.pyo
 *.pyd
 
+# IDE settings
+.idea/
+.vscode/
+
 # OS generated files
 .DS_Store
 Thumbs.db
 
-# IDE settings folders
-.idea/
-.vscode/
-
-ATM_Action_Recognition/dataset
-ATM_Action_Recognition/venv_action
-
-# Downloaded datasets/weights (handle within specific projects if needed)
-ATM_Face_Recognition/ATM-Theft-Detection-4/
-ATM_Face_Recognition/ATM-Theft-Detection-3/
-ATM_Face_Recognition/ATM-Theft-Detection-2/
-ATM_Face_Recognition/weights/
-ATM_Face_Recognition/deploy.py
-
-# Ultralytics runs (handle within specific project)
-ATM_Face_Recognition/runs/
-ATM_Face_Recognition/yolo11n.pt
-ATM_Face_Recognition/yolo8n.pt
+# Local datasets and training outputs
+ATM-Theft-Detection-4/
+runs/
+yolov8n.pt
+weights/best_saved_model/
+.runtime/
