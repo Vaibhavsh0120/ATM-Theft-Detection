@@ -8,7 +8,7 @@ sdk_version: "6.11.0"
 python_version: "3.11"
 app_file: app.py
 suggested_hardware: cpu-basic
-short_description: Detect covered and uncovered faces in ATM footage with a custom YOLOv8 model.
+short_description: YOLOv8 ATM face-cover detection demo.
 tags:
   - computer-vision
   - object-detection
