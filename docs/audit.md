@@ -35,3 +35,7 @@ Fixed:
 ## Limits
 
 No fresh model training, private Roboflow download, held-out accuracy evaluation, full TensorFlow conversion, physical webcam/device test or ATM field validation was performed. The repo contains no reproducible benchmark report or top-level license grant. Public deployment and Actions outcomes must be checked against their current runtime/run status; an upload or push alone does not prove readiness. Manual Hub publishing in Actions requires an `HF_TOKEN` repository secret; local cached credentials do not configure that secret.
+
+## Environment follow-up
+
+The owner supplied the Roboflow key in the ignored local `.env`. Access to dataset version 4 was verified with HTTP 200, and `.env.age` was regenerated using `agel`. No dataset was downloaded. The configured private identity remains unavailable, so a decrypt round trip is still unverified.

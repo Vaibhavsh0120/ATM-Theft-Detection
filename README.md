@@ -111,7 +111,7 @@ python scripts/push_hf.py --bundle-space-model
 
 Set `HF_MODEL_REPO_ID` and `HF_SPACE_REPO_ID` in `.env` or pass `--model-repo` and `--space-repo`. The destinations must already exist. Publishing adds normal commits, preserves history and unrelated remote files, excludes secrets/caches, and rejects concurrent remote edits. A dry run never modifies assets or contacts the Hub.
 
-The committed `.env.age` is an encrypted local environment backup. With the owner's PowerShell helpers, `ageu` restores `.env` and `agel` encrypts it again. Decryption requires the matching private identity; plaintext `.env` stays ignored. The backup includes the available Hugging Face credential and destination IDs. `ROBOFLOW_API_KEY` is empty until a dataset-access key is supplied. Keep the private identity outside Git.
+The committed `.env.age` is an encrypted local environment backup. With the owner's PowerShell helpers, `ageu` restores `.env` and `agel` encrypts it again. Decryption requires the matching private identity; plaintext `.env` stays ignored. The backup includes the configured Hugging Face and Roboflow credentials and destination IDs. Keep the private identity outside Git.
 
 `--bundle-space-model` refreshes the uploaded Space checkpoint from the model folder. After training, use `--refresh-model-from-training --bundle-space-model` to publish the new checkpoint to both destinations.
 
