@@ -28,6 +28,9 @@ Fixed:
 - Browser rendering at desktop and mobile widths; no horizontal overflow or browser errors in the checked screens. Better Design guidance/review tools were attempted but unavailable because the account's monthly allowance was exhausted; no Better Design score is claimed.
 - Linux Python 3.11 dependency resolution.
 - Existing release `best.pt` downloaded and SHA-256 matched against the bundled checkpoint: `f300d94325772555e8e22ffe6f88755fe9c696d75e4d4494dbbe2cfc0debf937`. Original checkpoint and tag preserved; release notes and checksum asset updated.
+- GitHub checks, manual release maintenance and manual Hub publishing workflows all completed successfully. The repository's encrypted `HF_TOKEN` Actions secret was configured for Hub publishing.
+- The updated Space reached RUNNING; real production photo, video and live-frame endpoints returned annotated results. The Python client's live-stream status parser could not handle `process_streaming`, so that endpoint was verified through Gradio's HTTP/SSE API instead. Physical browser-camera streaming remains untested.
+- Created a local `.env` with available Hub credentials and IDs and encrypted it using the owner's `agel` helper. The Roboflow key was unavailable. The private identity configured by `ageu` was absent, so decryption round-trip verification could not be performed.
 
 ## Limits
 
