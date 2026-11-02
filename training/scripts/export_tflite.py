@@ -13,16 +13,16 @@ os.environ.setdefault("YOLO_CONFIG_DIR", str(SCRIPT_DIR.parents[1] / ".runtime")
 
 from ultralytics import YOLO  # type: ignore
 
-from repo_paths import MERGED_DATASET_YAML, TFLITE_EXPORT_PATH, ensure_layout, resolve_preferred_model
+from repo_paths import DATASET_DIR, MERGED_DATASET_YAML, TFLITE_EXPORT_PATH, ensure_layout, resolve_preferred_model
 
-EXPORT_FORMAT = "edgetpu"
+EXPORT_FORMAT = "tflite"
 IMAGE_SIZE = 640
 
 
 def main() -> None:
     ensure_layout()
 
-    if not MERGED_DATASET_YAML.exists():
+    if not MERGED_DATASET_YAML.exists() or not (DATASET_DIR / ".labels_remapped").is_file():
         print(f"Dataset YAML not found at '{MERGED_DATASET_YAML}'.")
         print("Run 'python training/scripts/remap_labels.py' first.")
         raise SystemExit(1)
@@ -40,10 +40,14 @@ def main() -> None:
         exported_model = Path(
             model.export(
                 format=EXPORT_FORMAT,
+                int8=True,
                 data=str(MERGED_DATASET_YAML),
                 imgsz=IMAGE_SIZE,
             )
         ).resolve()
+        # In Ultralytics 8.3, the returned _int8.tflite has float I/O.
+        # Select the sibling with integer I/O used by verify_tflite.py.
+        exported_model = exported_model.with_name(f"{source_model.stem}_full_integer_quant.tflite")
     except Exception as exc:
         print(f"Quantization export failed: {exc}")
         raise SystemExit(1) from exc

@@ -1,0 +1,31 @@
+name: Maintain checkpoint release
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: weights-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Verify existing checkpoint and publish notes plus checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p .runtime/release
+          cp deploy/huggingface-model/weights/best.pt .runtime/release/best.pt
+          cd .runtime/release
+          sha256sum best.pt > SHA256SUMS
+          cd ../..
+          # Preserve the existing tag and binary. Refuse an accidental replacement.
+          gh release download weights --pattern best.pt --dir .runtime/published
+          cmp .runtime/release/best.pt .runtime/published/best.pt
+          gh release edit weights --title 'Pretrained weights — YOLOv8n face-cover detector' --notes-file docs/release-notes-weights.md
+          gh release upload weights .runtime/release/SHA256SUMS --clobber

@@ -27,19 +27,21 @@ def main() -> None:
 
     try:
         interpreter = tf.lite.Interpreter(model_path=str(TFLITE_EXPORT_PATH))
+        interpreter.allocate_tensors()
         input_details = interpreter.get_input_details()
-        input_dtype = input_details[0]["dtype"]
+        output_details = interpreter.get_output_details()
     except Exception as exc:
         print(f"Failed to inspect the TFLite model: {exc}")
         raise SystemExit(1) from exc
 
-    print(f"Model input tensor type: {input_dtype}")
-
-    if input_dtype in (np.int8, np.uint8):
-        print("Success: the model is fully quantized.")
+    details = input_details + output_details
+    for tensor in details:
+        print(f"Tensor {tensor['name']}: {tensor['dtype']}")
+    if details and all(tensor["dtype"] in (np.int8, np.uint8) and tensor["quantization"][0] > 0 for tensor in details):
+        print("Success: all input and output tensors use quantized integer I/O.")
         return
 
-    print(f"Failed: the model is not fully quantized ({input_dtype}).")
+    print("Failed: expected quantized int8/uint8 input and output tensors with a nonzero scale.")
     raise SystemExit(1)
 
 

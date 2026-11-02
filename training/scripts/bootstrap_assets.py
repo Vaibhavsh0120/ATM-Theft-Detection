@@ -3,11 +3,12 @@ from __future__ import annotations
 import os
 import shutil
 import sys
+import tempfile
+import zipfile
 from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
-from roboflow import Roboflow  # type: ignore
 from tqdm import tqdm
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -16,7 +17,6 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from repo_paths import (
     DATASET_DIR,
-    DATASET_DIR_NAME,
     DATASET_VERSION,
     DATA_DIR,
     PUBLISHED_MODEL_PATH,
@@ -24,7 +24,7 @@ from repo_paths import (
     ensure_layout,
 )
 
-WEIGHTS_URL = "https://github.com/Vaibhav0120/ATM-Theft-Detection/releases/download/weights/best.pt"
+WEIGHTS_URL = "https://huggingface.co/Vaibhavsh0120/ATM-Theft-Detection/resolve/main/weights/best.pt"
 ROBOFLOW_WORKSPACE = "vaibhav-7tcrm"
 ROBOFLOW_PROJECT = "atm-theft-detection-f8ezg"
 
@@ -35,25 +35,33 @@ def download_file(url: str, destination: Path) -> None:
     try:
         response = requests.get(url, stream=True, timeout=30)
         response.raise_for_status()
-    except requests.RequestException as exc:
-        raise RuntimeError(f"Failed to download '{destination.name}': {exc}") from exc
+    except requests.RequestException:
+        raise RuntimeError(
+            f"Failed to download '{destination.name}'. Check connectivity and download access."
+        ) from None
 
     total_size = int(response.headers.get("content-length", 0))
     block_size = 1024
 
     print(f"Downloading '{destination.name}'...")
-    with destination.open("wb") as handle, tqdm(
-        desc=destination.name,
-        total=total_size,
-        unit="iB",
-        unit_scale=True,
-    ) as progress:
+    partial = destination.with_suffix(destination.suffix + ".part")
+    with (
+        response,
+        partial.open("wb") as handle,
+        tqdm(
+            desc=destination.name,
+            total=total_size,
+            unit="iB",
+            unit_scale=True,
+        ) as progress,
+    ):
         for chunk in response.iter_content(block_size):
             progress.update(len(chunk))
             handle.write(chunk)
 
-    if destination.stat().st_size == 0:
+    if partial.stat().st_size == 0:
         raise RuntimeError(f"Downloaded file '{destination}' is empty.")
+    partial.replace(destination)
 
 
 def load_api_key() -> str:
@@ -63,6 +71,8 @@ def load_api_key() -> str:
     if api_key and api_key != "YOUR_API_KEY":
         return api_key
 
+    if not sys.stdin.isatty():
+        raise RuntimeError("Set ROBOFLOW_API_KEY in the environment or root .env before downloading.")
     entered_key = input("Enter your Roboflow Private API Key: ").strip()
     if not entered_key:
         raise RuntimeError("ROBOFLOW_API_KEY is required to download the dataset.")
@@ -71,37 +81,46 @@ def load_api_key() -> str:
 
 def download_dataset(api_key: str) -> None:
     print("--- Downloading dataset from Roboflow ---")
-    rf = Roboflow(api_key=api_key)
-    project = rf.workspace(ROBOFLOW_WORKSPACE).project(ROBOFLOW_PROJECT)
-    version = project.version(DATASET_VERSION)
-
-    if DATASET_DIR.exists():
-        print(f"Removing existing dataset at '{DATASET_DIR}'...")
-        shutil.rmtree(DATASET_DIR)
-
-    original_cwd = Path.cwd()
-    os.chdir(DATA_DIR)
+    endpoint = f"https://api.roboflow.com/{ROBOFLOW_WORKSPACE}/{ROBOFLOW_PROJECT}/{DATASET_VERSION}/yolov8"
     try:
-        dataset = version.download("yolov8")
-    finally:
-        os.chdir(original_cwd)
-
-    downloaded_path = Path(dataset.location).resolve()
-    expected_path = DATASET_DIR.resolve()
-
-    if downloaded_path != expected_path:
-        if expected_path.exists():
-            shutil.rmtree(expected_path)
-        downloaded_path.rename(expected_path)
-
+        with requests.get(endpoint, params={"api_key": api_key}, timeout=30) as response:
+            response.raise_for_status()
+            link = response.json()["export"]["link"]
+    except (requests.RequestException, ValueError, KeyError):
+        # Do not print the request URL: Roboflow credentials are query parameters.
+        raise RuntimeError("Could not obtain the Roboflow export. Check the API key and dataset access.") from None
+    with tempfile.TemporaryDirectory(prefix="atm-dataset-", dir=DATA_DIR) as temp:
+        stage = Path(temp)
+        archive = stage / "dataset.zip"
+        download_file(link, archive)
+        extracted = stage / "dataset"
+        extracted.mkdir()
+        with zipfile.ZipFile(archive) as bundle:
+            for member in bundle.infolist():
+                target = (extracted / member.filename).resolve()
+                if not target.is_relative_to(extracted.resolve()):
+                    raise RuntimeError("The dataset archive contains an unsafe path.")
+            bundle.extractall(extracted)
+        if not (extracted / "train/images").is_dir() or not (extracted / "data.yaml").is_file():
+            raise RuntimeError("Downloaded dataset is missing train/images or data.yaml; existing data was preserved.")
+        backup = DATASET_DIR.with_name(DATASET_DIR.name + ".previous")
+        if backup.exists():
+            raise RuntimeError(
+                f"A previous dataset backup already exists at '{backup}'. Resolve it before downloading again."
+            )
+        if DATASET_DIR.exists():
+            DATASET_DIR.rename(backup)
+        try:
+            extracted.rename(DATASET_DIR)
+        except Exception:
+            if backup.exists():
+                backup.rename(DATASET_DIR)
+            raise
+        if backup.exists():
+            shutil.rmtree(backup)
     for split in ("train", "valid", "test"):
         status = "found" if (DATASET_DIR / split).exists() else "missing"
         print(f"  - {split}: {status}")
-
-    if not (DATASET_DIR / "train").exists():
-        raise RuntimeError(
-            f"Downloaded dataset is missing the 'train' split in '{DATASET_DIR_NAME}'."
-        )
 
 
 def download_published_weights() -> None:

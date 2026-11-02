@@ -34,20 +34,22 @@ def main() -> None:
 
     print("Starting live inference with the quantized model. Press 'q' to quit.")
 
-    while True:
-        success, frame = cap.read()
-        if not success:
-            print("Failed to capture frame from webcam.")
-            break
+    try:
+        while True:
+            success, frame = cap.read()
+            if not success:
+                print("Failed to capture frame from webcam.")
+                break
 
-        for result in model(frame, stream=True, verbose=False):
-            cv2.imshow("YOLOv8 Live Inference", result.plot())
+            for result in model(frame, stream=True, verbose=False):
+                cv2.imshow("YOLOv8 Live Inference", result.plot())
 
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
 
-    cap.release()
-    cv2.destroyAllWindows()
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
     print("Inference stopped.")
 
 

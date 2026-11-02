@@ -1,19 +1,22 @@
 from __future__ import annotations
 
 import os
+import shutil
 import tempfile
+import time
 from collections import Counter
 from functools import lru_cache
 from pathlib import Path
+from threading import Lock
 from typing import Final, TypeAlias
 
 ROOT: Final[Path] = Path(__file__).resolve().parent
-REPO_ROOT: Final[Path] = ROOT.parents[1]
 APP_CACHE_DIR = ROOT / ".runtime"
 APP_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 os.environ.setdefault("YOLO_CONFIG_DIR", str(APP_CACHE_DIR))
 
 import gradio as gr
+import cv2
 import numpy as np
 from PIL import Image as PILImage
 from ultralytics import YOLO
@@ -27,9 +30,11 @@ HF_MODEL_REPO_ID = os.getenv("HF_MODEL_REPO_ID")
 HF_MODEL_FILENAME = os.getenv("HF_MODEL_FILENAME", "weights/best.pt")
 DEFAULT_LOCAL_MODEL_CANDIDATES: Final[tuple[Path, ...]] = (
     ROOT / "weights" / "best.pt",
-    REPO_ROOT / "deploy" / "huggingface-model" / "weights" / "best.pt",
+    ROOT.parent / "huggingface-model" / "weights" / "best.pt",
 )
 TITLE: Final[str] = "ATM Theft Detection"
+MODEL_LOCK = Lock()
+MAX_VIDEO_SECONDS = 30
 
 THEME = gr.themes.Soft(
     primary_hue="amber",
@@ -117,6 +122,10 @@ body,
   font-family: 'IBM Plex Sans', ui-sans-serif, sans-serif;
   text-rendering: auto;
   color-scheme: light;
+}
+
+.gradio-container > .main {
+  padding: 0 !important;
 }
 
 html,
@@ -488,12 +497,23 @@ button.secondary *,
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 600px) {
+  .hero-shell { padding: 20px; border-radius: 20px; }
+  .hero-title { font-size: 2.2rem; line-height: 1.05; }
+  .hero-copy { font-size: 0.95rem; line-height: 1.5; }
+  .metric-grid { gap: 8px; margin-top: 16px; }
+  .metric-card { padding: 12px; border-radius: 12px; }
+  .metric-value { font-size: 1.15rem; margin-top: 4px; }
+  .metric-copy { display: none; }
+  .dashboard-card, .panel { padding: 14px; border-radius: 18px; }
+}
 """
 
 HERO_HTML = """
 <section class="hero-shell">
   <div class="hero-kicker">ATM Security Monitoring · YOLOv8 Detection</div>
-  <h1 class="hero-title">Read faces, flag risk, keep the feed under watch.</h1>
+  <h1 class="hero-title">Explore face-cover detection.</h1>
   <p class="hero-copy">
     This Space runs a custom YOLOv8 model trained for ATM monitoring. It separates covered and
     uncovered faces and supports three workflows: single photo review, short clip analysis, and
@@ -507,7 +527,7 @@ HERO_HTML = """
     </div>
     <div class="metric-card">
       <div class="metric-label">Classes</div>
-      <div class="metric-value">2 Security Labels</div>
+      <div class="metric-value">2 Detection Labels</div>
       <div class="metric-copy">The model detects <strong>Face_Covered</strong> and <strong>Face_Uncovered</strong>.</div>
     </div>
     <div class="metric-card">
@@ -532,7 +552,7 @@ LEGEND_HTML = """
     <div class="legend-swatch" style="background:#c58d2a;"></div>
     <div class="legend-copy">
       <strong>Face_Uncovered</strong>
-      <span>Represents visible, non-concealed faces and non-threatening observation states in the current model design.</span>
+      <span>Detects visible faces. Neither label establishes intent, identity, or whether a crime is occurring.</span>
     </div>
   </div>
 </div>
@@ -543,13 +563,9 @@ LEGEND_HTML = """
 def resolve_model_path() -> Path:
     if MODEL_PATH_ENV:
         explicit_model_path = Path(MODEL_PATH_ENV).expanduser()
-        if explicit_model_path.exists():
+        if explicit_model_path.is_file():
             return explicit_model_path
         raise FileNotFoundError(f"MODEL_PATH points to a missing file: '{explicit_model_path}'.")
-
-    for candidate in DEFAULT_LOCAL_MODEL_CANDIDATES:
-        if candidate.exists():
-            return candidate
 
     if HF_MODEL_REPO_ID:
         from huggingface_hub import hf_hub_download
@@ -562,6 +578,10 @@ def resolve_model_path() -> Path:
                 cache_dir=str(hub_cache_dir),
             )
         )
+
+    for candidate in DEFAULT_LOCAL_MODEL_CANDIDATES:
+        if candidate.is_file():
+            return candidate
 
     searched_paths = ", ".join(str(path) for path in DEFAULT_LOCAL_MODEL_CANDIDATES)
     raise FileNotFoundError(
@@ -625,8 +645,9 @@ def run_image_inference(
         return None, idle_message
 
     try:
-        result = load_model().predict(image, conf=conf, iou=iou, verbose=False)[0]
-        annotated = render_annotated_image(result)
+        with MODEL_LOCK:
+            result = load_model().predict(image, conf=conf, iou=iou, verbose=False)[0]
+            annotated = render_annotated_image(result)
         return annotated, build_detection_summary(result, active_heading)
     except Exception as exc:
         return None, f"Error while running inference: {exc}"
@@ -656,22 +677,44 @@ def predict_video(video_path: str | None, conf: float, iou: float) -> VideoPredi
     if not video_path:
         return None, "Upload a short video clip first."
 
+    output_root = None
     try:
-        output_root = Path(tempfile.mkdtemp(prefix="atm-space-"))
+        capture = cv2.VideoCapture(video_path)
+        try:
+            fps = capture.get(cv2.CAP_PROP_FPS)
+            frames = capture.get(cv2.CAP_PROP_FRAME_COUNT)
+            if not capture.isOpened() or fps <= 0 or frames <= 0:
+                raise ValueError("The video could not be read. Try a valid MP4 clip.")
+            if frames / fps > MAX_VIDEO_SECONDS:
+                raise ValueError(f"Choose a clip no longer than {MAX_VIDEO_SECONDS} seconds.")
+        finally:
+            capture.release()
+        video_cache = APP_CACHE_DIR / "videos"
+        video_cache.mkdir(exist_ok=True)
+        for old in video_cache.glob("atm-space-*"):
+            if old.is_dir() and time.time() - old.stat().st_mtime > 3600:
+                shutil.rmtree(old, ignore_errors=True)
+        output_root = Path(tempfile.mkdtemp(prefix="atm-space-", dir=video_cache))
         output_dir = output_root / "prediction"
 
-        load_model().predict(
-            source=video_path,
-            conf=conf,
-            iou=iou,
-            project=str(output_root),
-            name="prediction",
-            save=True,
-            exist_ok=True,
-            verbose=False,
-        )
+        with MODEL_LOCK:
+            results = load_model().predict(
+                source=video_path,
+                conf=conf,
+                iou=iou,
+                project=str(output_root),
+                name="prediction",
+                save=True,
+                exist_ok=True,
+                verbose=False,
+                stream=True,
+            )
+            for _ in results:
+                pass
 
-        candidates = sorted(path for path in output_dir.iterdir() if path.is_file())
+        candidates = sorted(
+            path for path in output_dir.iterdir() if path.suffix.lower() in {".mp4", ".avi", ".mov", ".mkv"}
+        )
         if not candidates:
             raise RuntimeError("Ultralytics did not produce an annotated output video.")
 
@@ -680,11 +723,16 @@ def predict_video(video_path: str | None, conf: float, iou: float) -> VideoPredi
             "Video review complete.\n\nAnnotated output generated. Short MP4 clips work best on CPU Spaces.",
         )
     except Exception as exc:
+        if output_root is not None:
+            shutil.rmtree(output_root, ignore_errors=True)
         return None, f"Error while running video inference: {exc}"
 
 
-with gr.Blocks(title=TITLE, fill_width=True) as demo:
+with gr.Blocks(title=TITLE, fill_width=True, delete_cache=(3600, 3600)) as demo:
     gr.HTML(HERO_HTML)
+    gr.Markdown(
+        "**Research demo:** face coverings do not establish theft or intent. Uploaded media and webcam frames are sent to this server for processing; use only media you have permission to share."
+    )
 
     with gr.Row():
         with gr.Column(scale=2, elem_classes="dashboard-card"):
@@ -743,14 +791,11 @@ with gr.Blocks(title=TITLE, fill_width=True) as demo:
                         height=420,
                     )
                     photo_run = gr.Button("Run photo inference", variant="primary")
-                    gr.ClearButton(
-                        components=[photo_input],
-                        value="Clear photo",
-                    )
                 with gr.Column(elem_classes="dashboard-card"):
                     gr.Markdown("### Result")
                     photo_output = gr.Image(label="Annotated photo", height=420)
                     photo_summary = gr.Markdown("Upload a photo or capture one from the webcam to begin.")
+                    gr.ClearButton([photo_input, photo_output, photo_summary], value="Clear photo and result")
 
             photo_run.click(
                 fn=predict_photo,
@@ -758,6 +803,7 @@ with gr.Blocks(title=TITLE, fill_width=True) as demo:
                 outputs=[photo_output, photo_summary],
                 show_progress="minimal",
                 concurrency_limit=1,
+                concurrency_id="yolo",
             )
 
         with gr.Tab("Short Video"):
@@ -772,7 +818,7 @@ with gr.Blocks(title=TITLE, fill_width=True) as demo:
                     gr.Markdown(
                         """
                         <div class="helper">
-                          Keep clips short for the best turnaround on CPU. MP4 clips with a stable camera
+                          Use clips up to 30 seconds and 25 MB. MP4 clips with a stable camera
                           angle work best.
                         </div>
                         """
@@ -789,6 +835,7 @@ with gr.Blocks(title=TITLE, fill_width=True) as demo:
                 outputs=[video_output, video_summary],
                 show_progress="minimal",
                 concurrency_limit=1,
+                concurrency_id="yolo",
             )
 
         with gr.Tab("Live Inference"):
@@ -820,13 +867,14 @@ with gr.Blocks(title=TITLE, fill_width=True) as demo:
                 inputs=[live_input, conf, iou],
                 outputs=[live_output, live_summary],
                 show_progress="hidden",
-                queue=False,
+                queue=True,
                 concurrency_limit=1,
+                concurrency_id="yolo",
                 stream_every=0.35,
             )
 
-demo.queue(default_concurrency_limit=1)
+demo.queue(default_concurrency_limit=1, max_size=16)
 
 
 if __name__ == "__main__":
-    demo.launch(theme=THEME, css=CSS)
+    demo.launch(theme=THEME, css=CSS, max_file_size="25mb")

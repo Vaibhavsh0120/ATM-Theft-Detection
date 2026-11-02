@@ -1,97 +1,54 @@
-# Training Workspace
+# Training workspace
 
-This folder contains the local-only training workflow for the ATM theft detection model.
-
-## Layout
-
-- `configs/`: dataset YAML files used by Ultralytics
-- `data/`: downloaded Roboflow datasets
-- `models/pretrained/`: optional local base checkpoints
-- `models/exports/`: generated quantized exports
-- `outputs/`: Ultralytics training runs and checkpoints
-- `scripts/`: setup, remapping, training, and local inference scripts
-
-## Setup
+Use Python 3.11 and run these commands from the repository root. Follow the [root README](../README.md) to create and activate `.venv`.
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r training/requirements.txt
+python -m pip install -r training/requirements.txt
 ```
 
-Create a root-level `.env` from `.env.example` and set:
+CPU PyTorch is the default. For GPU training, use the CUDA build matching your hardware from the official PyTorch installation selector. Set `ROBOFLOW_API_KEY` in a root `.env` copied from `.env.example`.
 
-```text
-ROBOFLOW_API_KEY="YOUR_API_KEY"
-```
-
-## Commands
-
-### 1. Download dataset and published model
+## Prepare and train
 
 ```bash
 python training/scripts/bootstrap_assets.py
-```
-
-This populates `training/data/` and ensures `deploy/huggingface-model/weights/best.pt` exists.
-
-### 2. Merge labels into the final 2-class dataset
-
-```bash
 python training/scripts/remap_labels.py
-```
-
-This step mutates the downloaded label files in place once per fresh dataset
-download. If you need to rerun it, run `python training/scripts/bootstrap_assets.py`
-first to restore the original Roboflow export.
-
-### 3. Train YOLOv8
-
-```bash
-python training/scripts/train_yolo.py
-python training/scripts/train_yolo.py --epochs 5
+python training/scripts/train_yolo.py --epochs 80
 python training/scripts/train_yolo.py --resume
+python training/scripts/train_yolo.py --resume-from training/outputs/runs/detect/train2/weights/last.pt
 ```
 
-Fresh runs are written under incrementing run folders such as:
+Bootstrap uses the Roboflow export REST API, downloads to staging and validates before replacing existing data. It preserves the previous dataset if downloading or extraction fails. The API key is never printed in download errors.
 
-`training/outputs/runs/detect/train/weights/best.pt`
-`training/outputs/runs/detect/train2/weights/best.pt`
+Remapping supports the original version 4 class order. It validates all bounding boxes before writing, saves original labels and `data.yaml` under `.original-labels/`, updates metadata to the two target classes, and creates `.labels_remapped` only on completion. If interrupted after writes begin, restore a fresh dataset using bootstrap before retrying. Never delete the marker and remap already converted labels: original class 0 and class 1 have different meanings.
 
-Use `--resume` to continue from the latest `last.pt` checkpoint after an interrupted run.
-Starting without `--resume` always creates a new run by default.
+Fresh runs are auto-incremented under `training/outputs/runs/detect/train*/`. Resume uses the most recently modified `last.pt`; an explicit checkpoint is safer when multiple experiments exist. Resume preserves the saved epoch target. `YOLO_BASE_MODEL`, `YOLO_EPOCHS`, `YOLO_IMAGE_SIZE` and `YOLO_RUN_NAME` configure fresh runs through environment variables. The default base is `yolov8n.pt`, downloaded to `training/models/pretrained/`.
 
-If `yolov8n.pt` is not already cached, the training script downloads it into
-`training/models/pretrained/`.
-
-### 4. Export a quantized TFLite model
-
-```bash
-python training/scripts/export_tflite.py
-python training/scripts/verify_tflite.py
-```
-
-`verify_tflite.py` expects TensorFlow to be available in your local environment.
-
-### 5. Push the Hugging Face model and Space repos
-
-```bash
-python scripts/push_hf.py
-```
-
-Set `HF_MODEL_REPO_ID` and `HF_SPACE_REPO_ID` in the root `.env` if you want
-`push_hf.py` to publish both standalone repos in one command. It pushes the
-current deploy folders as-is by default. If you want to refresh
-`deploy/huggingface-model/` from the latest local training outputs first, use
-`python scripts/push_hf.py --refresh-model-from-training`.
-
-## Local Inference
-
-Run the desktop webcam scripts after you have a `.pt` or `.tflite` artifact available:
+## Desktop inference
 
 ```bash
 python training/scripts/run_live_inference.py
+```
+
+Uses the newest local `best.pt`, then the bundled published checkpoint. Set `WEBCAM_INDEX` if the camera is not device 0. Press `q` to quit. This requires a desktop session and OpenCV with GUI support.
+
+## Optional INT8 TFLite export
+
+Use a separate Python 3.11 environment on Linux/WSL for TensorFlow conversion dependencies; this is heavier than running the website. Install the training requirements and TensorFlow there. Ultralytics may install additional conversion dependencies during export.
+
+```bash
+python -m pip install 'tensorflow>=2.16,<2.20'
+python training/scripts/export_tflite.py
+python training/scripts/verify_tflite.py
 python training/scripts/run_live_tflite.py
 ```
 
-Set `WEBCAM_INDEX` if your camera is not on device `0`.
+Export needs the prepared dataset for calibration. The exporter selects `format=tflite, int8=True`, then copies the **full integer I/O** sibling to `training/models/exports/best_full_integer_quant.tflite`. It does not invoke the Coral Edge TPU compiler. Verification checks actual input and output tensor dtypes; successful construction of a YOLO wrapper alone does not validate a TFLite file. Conversion and hardware inference must be tested in the target environment; CI does not perform conversion.
+
+## Publish
+
+```bash
+python scripts/push_hf.py --refresh-model-from-training --bundle-space-model
+```
+
+See [publishing](../docs/publishing.md) for authentication and safe Hub uploads. Datasets, base models, generated exports, and training outputs stay ignored by Git. Publishable checkpoints live in `deploy/`.

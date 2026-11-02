@@ -17,6 +17,7 @@ from ultralytics.utils.downloads import attempt_download_asset  # type: ignore
 
 from repo_paths import (
     DETECT_RUNS_DIR,
+    DATASET_DIR,
     MERGED_DATASET_YAML,
     PRETRAINED_DIR,
     REPO_ROOT,
@@ -103,8 +104,8 @@ def main() -> None:
     args = parse_args(sys.argv[1:])
     ensure_layout()
 
-    if not MERGED_DATASET_YAML.exists():
-        print(f"Dataset YAML not found at '{MERGED_DATASET_YAML}'.")
+    if not MERGED_DATASET_YAML.exists() or not (DATASET_DIR / ".labels_remapped").is_file():
+        print("A prepared two-class dataset is required before training.")
         print("Run 'python training/scripts/bootstrap_assets.py' and 'python training/scripts/remap_labels.py' first.")
         raise SystemExit(1)
 
@@ -128,7 +129,9 @@ def main() -> None:
         print("Resume mode: enabled")
         print(f"Resume checkpoint: {resume_checkpoint}")
         if args.epochs is not None:
-            print("Ignoring explicit epoch override while resuming. Ultralytics resumes with the checkpoint's saved epoch target.")
+            print(
+                "Ignoring explicit epoch override while resuming. Ultralytics resumes with the checkpoint's saved epoch target."
+            )
 
         model = YOLO(str(resume_checkpoint))
         train_kwargs = {

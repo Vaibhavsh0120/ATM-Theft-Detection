@@ -1,223 +1,164 @@
-<h1 align="center">Real-Time ATM Theft Detection with YOLOv8</h1>
+<p align="center"><img src="docs/assets/banner.svg" alt="ATM Theft Detection — YOLOv8 face-cover research demo" width="100%"></p>
 
 <p align="center">
-  <img src="https://media.licdn.com/dms/image/sync/v2/D5627AQEQ41fkNOIq8A/articleshare-shrink_800/articleshare-shrink_800/0/1722446223640?e=2147483647&amp;v=beta&amp;t=IpkZR8u2Y5LepFrMrfZo-UjZLkOoFPgaiXqtNU9WUMc" alt="ATM Theft Detection Demo" width="700"/>
+  <a href="https://vaibhavsh0120-atm-theft-detection.hf.space"><strong>Open website ↗</strong></a> ·
+  <a href="https://huggingface.co/spaces/Vaibhavsh0120/ATM-Theft-Detection">Hugging Face Space</a> ·
+  <a href="https://huggingface.co/Vaibhavsh0120/ATM-Theft-Detection">Model &amp; weights</a> ·
+  <a href="docs/publishing.md">Publishing guide</a>
 </p>
-
 <p align="center">
-  <b>Detect suspicious ATM activity in real time using a custom YOLOv8n model trained to separate covered and uncovered faces.</b>
+  <a href="https://github.com/Vaibhavsh0120/ATM-Theft-Detection/actions/workflows/ci.yml"><img src="https://github.com/Vaibhavsh0120/ATM-Theft-Detection/actions/workflows/ci.yml/badge.svg" alt="Checks"></a>
+  <img src="https://img.shields.io/badge/Python-3.11-3776AB?logo=python&amp;logoColor=white" alt="Python 3.11">
+  <img src="https://img.shields.io/badge/YOLOv8n-2_classes-d9a15b" alt="YOLOv8n, two detection classes">
 </p>
 
----
+A custom YOLOv8n detector that labels **Face_Covered** and **Face_Uncovered**, with a Gradio website for photo, short-video and browser-webcam inference. Includes dataset preparation, training/resume, optional INT8 TFLite export and Hugging Face publishing.
 
-## Overview
+> **Scope:** this model detects face-cover patterns. It does not detect theft, establish intent or identify people. A covered face is not evidence of wrongdoing. This is a research demo, not a validated ATM alarm system.
 
-This project focuses on ATM security monitoring with a custom YOLOv8 pipeline built around a Roboflow dataset and a lightweight YOLOv8n detector. The repository is structured as a small monorepo so you can:
+## Try it
 
-- download and prepare the dataset locally
-- train and resume YOLOv8 runs
-- run webcam inference on desktop
-- package the latest checkpoint for a Hugging Face Model repo
-- push both the Hugging Face Model repo and Hugging Face Space repo with one command
+| Resource | Link / purpose |
+| --- | --- |
+| **Live website** | [Open the detector](https://vaibhavsh0120-atm-theft-detection.hf.space) |
+| Space home | [App, source files and runtime status](https://huggingface.co/spaces/Vaibhavsh0120/ATM-Theft-Detection) |
+| Space source | [Browse deployed app files](https://huggingface.co/spaces/Vaibhavsh0120/ATM-Theft-Detection/tree/main) |
+| Model repository | [Model card and checkpoint](https://huggingface.co/Vaibhavsh0120/ATM-Theft-Detection) |
+| Checkpoint | [Download weights/best.pt](https://huggingface.co/Vaibhavsh0120/ATM-Theft-Detection/resolve/main/weights/best.pt) |
+| GitHub release | [Original checkpoint + SHA-256 checksum](https://github.com/Vaibhavsh0120/ATM-Theft-Detection/releases/tag/weights) |
+| Dataset | [Roboflow Universe — version 4](https://universe.roboflow.com/vaibhav-7tcrm/atm-theft-detection-f8ezg/dataset/4) |
+| Automation | [Checks](https://github.com/Vaibhavsh0120/ATM-Theft-Detection/actions/workflows/ci.yml) · [Manual Hub publishing](https://github.com/Vaibhavsh0120/ATM-Theft-Detection/actions/workflows/publish-hf.yml) |
 
-### Class Merging
+The free CPU Space can sleep when idle; allow time to wake. Choose **Photo** for an image, **Short Video** for a clip up to **30 seconds / 25 MB**, or **Live Inference** for webcam frames. Allow camera access over HTTPS. Shared CPU capacity means video and live processing may be slower than playback.
 
-The current Roboflow export contains **21 source classes**. They are remapped into two final detection classes by [`training/scripts/remap_labels.py`](training/scripts/remap_labels.py):
+Uploads and streamed frames are processed on the Space server. Use media you have permission to share. Outputs are temporary: Gradio expires its served cache hourly; source video outputs older than an hour are removed on the next video request. This is not an immediate-deletion guarantee.
 
-- **Face_Covered:** `Helmet`, `balaclava`, `concealing glasses`, `cover`, `hand`, `mask`, `medicine mask`, `person-with-mask`, `scarf`, `thief_mask`
-- **Face_Uncovered:** `Cuong`, `Hung`, `Lau-Ka-Fai`, `Trung`, `Tuan`, `Vu`, `face`, `non-concealing glasses`, `normal`, `nothing`, `person-without-mask`
+<details>
+<summary>Website preview</summary>
 
----
+![Gradio website with detection controls, photo upload and annotated result panels](docs/assets/website.png)
 
-## Quick Start
+</details>
 
-### 1. Prerequisites
+## Run the website locally
 
-- Python 3.11
-- NVIDIA GPU with CUDA recommended for training speed
-- Git LFS recommended if you plan to publish model weights
-
-### 2. Clone And Install
+No Roboflow key, dataset download or training is needed: the checkpoint is included through Git LFS.
 
 ```bash
+git lfs install
 git clone https://github.com/Vaibhavsh0120/ATM-Theft-Detection.git
 cd ATM-Theft-Detection
 python -m venv .venv
 ```
 
-Activate the environment and install the training dependencies:
+Use **Python 3.11**. Activate the environment:
+
+```powershell
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+```
 
 ```bash
-# Windows
-.\.venv\Scripts\activate
-
-# macOS/Linux
+# macOS / Linux
 source .venv/bin/activate
-
-pip install -r training/requirements.txt
 ```
-
-### 3. Roboflow API Key And Dataset
-
-1. Create a root `.env` file from `.env.example`.
-2. Add your Roboflow private API key:
-
-   ```text
-   ROBOFLOW_API_KEY="YOUR_API_KEY"
-   ```
-
-3. Download the dataset and published model assets:
-
-   ```bash
-   python training/scripts/bootstrap_assets.py
-   ```
-
-4. Remap the source labels into the final two-class dataset:
-
-   ```bash
-   python training/scripts/remap_labels.py
-   ```
-
-5. Start training:
-
-   ```bash
-   python training/scripts/train_yolo.py --epochs 5
-   ```
-
-6. Resume an interrupted run when needed:
-
-   ```bash
-   python training/scripts/train_yolo.py --resume
-   ```
-
-Dataset source: [Roboflow Universe - ATM Theft Detection](https://universe.roboflow.com/vaibhav-7tcrm/atm-theft-detection-f8ezg)
-
----
-
-## Project Structure
-
-```text
-ATM-THEFT-DETECTION/
-├── .env.example
-├── README.md
-├── deploy/
-│   ├── huggingface-model/      # Standalone Hugging Face Model repo contents
-│   └── huggingface-space/      # Standalone Hugging Face Space repo contents
-├── docs/
-│   └── publishing.md
-├── scripts/
-│   └── push_hf.py              # Refresh deploy assets and push to Hugging Face
-└── training/
-    ├── configs/
-    ├── data/                   # Downloaded Roboflow dataset
-    ├── models/
-    │   ├── exports/
-    │   └── pretrained/
-    ├── outputs/                # YOLO training runs
-    ├── requirements.txt
-    └── scripts/
-        ├── bootstrap_assets.py
-        ├── remap_labels.py
-        ├── train_yolo.py
-        ├── export_tflite.py
-        ├── run_live_inference.py
-        └── run_live_tflite.py
-```
-
----
-
-## Usage
-
-### 1. Train A Fresh Model
 
 ```bash
+python -m pip install -r deploy/huggingface-space/requirements.txt
+python deploy/huggingface-space/app.py
+```
+
+Open the local URL printed in the terminal, normally `http://127.0.0.1:7860`.
+
+If the checkpoint is missing or reports a Git LFS pointer error, run `git lfs pull`.
+
+## Train your own checkpoint
+
+Install the separate training dependencies and copy `.env.example` to `.env`. Set `ROBOFLOW_API_KEY` to a private key with dataset access. Keep secrets out of Git.
+
+```bash
+python -m pip install -r training/requirements.txt
+python training/scripts/bootstrap_assets.py
+python training/scripts/remap_labels.py
 python training/scripts/train_yolo.py --epochs 80
 ```
 
-Fresh runs are written to incrementing folders such as:
-
-```text
-training/outputs/runs/detect/train/
-training/outputs/runs/detect/train2/
-training/outputs/runs/detect/train3/
-```
-
-### 2. Resume From The Last Checkpoint
+Bootstrap downloads and validates a fresh Roboflow export **before** replacing the previous dataset. Remapping validates all labels and the 21-class order, backs up originals under `.original-labels/`, and converts labels and dataset metadata to two classes. It refuses to remap twice. Training requires the completed remap marker.
 
 ```bash
+# Resume the most recently modified last.pt
 python training/scripts/train_yolo.py --resume
-```
 
-You can also resume a specific checkpoint:
+# Or resume an explicit checkpoint
+python training/scripts/train_yolo.py --resume-from training/outputs/runs/detect/train2/weights/last.pt
 
-```bash
-python training/scripts/train_yolo.py --resume-from "training/outputs/runs/detect/train2/weights/last.pt"
-```
-
-### 3. Live Webcam Inference
-
-Run desktop webcam inference with the latest trained model or the published fallback checkpoint:
-
-```bash
+# Desktop webcam inference (q to quit)
 python training/scripts/run_live_inference.py
 ```
 
-If you want TFLite export and TFLite webcam inference:
+Fresh runs go to incrementing `training/outputs/runs/detect/train*/` folders. Desktop inference uses the latest local `best.pt`, falling back to the published model. Set `WEBCAM_INDEX` to choose another camera.
+
+The default dependencies support CPU inference/training. For NVIDIA CUDA, install the matching PyTorch build using the [official installation selector](https://pytorch.org/get-started/locally/). See [training details and TFLite export](training/README.md).
+
+## Publish to Hugging Face
 
 ```bash
-python training/scripts/export_tflite.py
-python training/scripts/verify_tflite.py
-python training/scripts/run_live_tflite.py
-```
-
-### 4. Publish To Hugging Face
-
-Add these optional values to your root `.env`:
-
-```text
-HF_MODEL_REPO_ID="your-username/your-model-repo"
-HF_SPACE_REPO_ID="your-username/your-space-repo"
-```
-
-Log in once:
-
-```bash
-huggingface-cli login
-```
-
-Then push both standalone deploy targets in one command:
-
-```bash
-python scripts/push_hf.py
-```
-
-If you want the Space repo to include `weights/best.pt` directly instead of downloading from the model repo:
-
-```bash
+python -m pip install huggingface_hub==1.9.2 python-dotenv==1.1.1
+hf auth login
+python scripts/push_hf.py --dry-run
 python scripts/push_hf.py --bundle-space-model
 ```
 
----
+Set `HF_MODEL_REPO_ID` and `HF_SPACE_REPO_ID` in `.env` or pass `--model-repo` and `--space-repo`. The destinations must already exist. Publishing adds normal commits, preserves history and unrelated remote files, excludes secrets/caches, and rejects concurrent remote edits. A dry run never modifies assets or contacts the Hub.
 
-## Validation Snapshot
+`--bundle-space-model` refreshes the uploaded Space checkpoint from the model folder. After training, use `--refresh-model-from-training --bundle-space-model` to publish the new checkpoint to both destinations.
 
-Recent local 5-epoch smoke-run results:
+The [checkpoint release workflow](.github/workflows/release-weights.yml) maintains the existing `weights` release, verifies the binary before updating notes, and attaches `SHA256SUMS`.
 
-- **Face_Covered:** Precision `0.894`, Recall `0.827`, mAP50 `0.898`, mAP50-95 `0.558`
-- **Face_Uncovered:** Precision `0.823`, Recall `0.800`, mAP50 `0.855`, mAP50-95 `0.599`
+The [manual publishing workflow](.github/workflows/publish-hf.yml) requires a repository secret named `HF_TOKEN` with write access. Normal GitHub pushes run checks; they do not automatically deploy. See the [complete publishing guide](docs/publishing.md).
 
-These numbers come from a short verification run, not a final long-training benchmark.
+## Repository map
 
----
+```text
+├── .github/workflows/        # Checks + manually triggered Hub publishing
+├── deploy/
+│   ├── huggingface-model/    # Standalone model card, checkpoint, optional exports
+│   └── huggingface-space/    # Standalone Gradio app, requirements, bundled weights
+├── docs/                    # Publishing guide, audit scope, README assets
+├── scripts/push_hf.py        # Safe Hub publishing CLI
+├── tests/                   # Regression + real checkpoint smoke tests
+├── training/
+│   ├── configs/             # Two-class dataset configuration
+│   ├── data/                # Ignored local Roboflow exports
+│   ├── models/              # Ignored base models and generated exports
+│   ├── outputs/             # Ignored training runs/checkpoints
+│   ├── scripts/             # Download, remap, train, export, webcam utilities
+│   └── requirements.txt     # CPU-compatible training dependencies
+└── requirements-dev.txt     # Test and lint tools
+```
 
-## Notes
+The two deploy folders are independently publishable. Bundled checkpoints intentionally exist in both so each Hugging Face repository works on its own.
 
-- [`training/scripts/remap_labels.py`](training/scripts/remap_labels.py) mutates label files in place once per fresh dataset download.
-- If you need to remap again, rerun `python training/scripts/bootstrap_assets.py` first to restore a clean Roboflow export.
-- The Hugging Face Space can either bundle weights locally or load them from the Hugging Face Model repo through `HF_MODEL_REPO_ID`.
+## Development checks
 
----
+```bash
+python -m pip install -r deploy/huggingface-space/requirements.txt -r training/requirements.txt -r requirements-dev.txt
+ruff check .
+python -m compileall -q scripts training/scripts deploy/huggingface-space
+pytest -q
+```
 
-## Contributing
+Tests cover model selection, shared queue configuration, real photo/live-frame/video inference, safe label validation and publishing behavior. CI uses Python 3.11 and downloads LFS checkpoints; it does not retrain the model or need credentials. See [audit findings and verification limits](docs/audit.md).
 
-Pull requests and suggestions are welcome. Open an issue first for major changes so the scope is clear before implementation.
+## Model and data notes
+
+The original 21 classes are merged as follows:
+
+| Final class | Source labels |
+| --- | --- |
+| `Face_Covered` | Helmet, balaclava, concealing glasses, cover, hand, mask, medicine mask, person-with-mask, scarf, thief_mask |
+| `Face_Uncovered` | Cuong, Hung, Lau-Ka-Fai, Trung, Tuan, Vu, face, non-concealing glasses, normal, nothing, person-without-mask |
+
+Lighting, camera angle, occlusion and dataset bias can affect predictions. Confidence scores are model scores, not probabilities of theft. This repository does not include a reproducible held-out evaluation report, so historical five-epoch figures are not presented as verified benchmarks.
+
+Check the upstream dataset and [Ultralytics licensing terms](https://www.ultralytics.com/license) before reuse. The repository currently has no top-level license grant. Contributions are welcome through issues and pull requests.

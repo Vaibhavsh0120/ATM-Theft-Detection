@@ -35,21 +35,23 @@ def main() -> None:
 
     print("Starting live inference. Press 'q' to quit.")
 
-    while True:
-        success, frame = cap.read()
-        if not success:
-            print("Failed to capture frame from webcam.")
-            break
+    try:
+        while True:
+            success, frame = cap.read()
+            if not success:
+                print("Failed to capture frame from webcam.")
+                break
 
-        results = model(frame, verbose=False)
-        annotated_frame = results[0].plot()
-        cv2.imshow("YOLOv8 Live Inference", annotated_frame)
+            results = model(frame, verbose=False)
+            annotated_frame = results[0].plot()
+            cv2.imshow("YOLOv8 Live Inference", annotated_frame)
 
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
 
-    cap.release()
-    cv2.destroyAllWindows()
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
     print("Inference stopped.")
 
 

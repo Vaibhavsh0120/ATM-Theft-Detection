@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="280" viewBox="0 0 1200 280" role="img" aria-labelledby="title desc">
+<title id="title">ATM Theft Detection — YOLOv8 face-cover research demo</title>
+<desc id="desc">Photo, video and webcam inputs feed a two-class face-cover detector.</desc>
+<rect width="1200" height="280" rx="20" fill="#211c18"/>
+<rect x="36" y="36" width="5" height="208" rx="2" fill="#e5ad64"/>
+<text x="68" y="72" fill="#e5ad64" font-family="Arial,sans-serif" font-size="15" letter-spacing="3">COMPUTER VISION · YOLOv8n</text>
+<text x="66" y="130" fill="#fff8ef" font-family="Arial,sans-serif" font-size="45" font-weight="700">ATM Theft Detection</text>
+<text x="68" y="172" fill="#dcccbc" font-family="Arial,sans-serif" font-size="20">Explore face-cover detection in photos, clips and live frames.</text>
+<text x="68" y="229" fill="#e5ad64" font-family="Arial,sans-serif" font-size="16">RESEARCH DEMO  /  TWO CLASSES  /  CPU INFERENCE</text>
+<g fill="none" stroke="#e5ad64" stroke-width="3">
+<rect x="929" y="57" width="164" height="164" rx="24"/>
+<path d="M954 105V82h23m91 23V82h-23m-91 91v23h23m91-23v23h-23"/>
+<circle cx="1011" cy="126" r="24"/>
+<path d="M974 177c5-29 69-29 74 0"/>
+</g>
+</svg>
